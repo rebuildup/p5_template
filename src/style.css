@@ -20,8 +20,12 @@ body {
   align-items: center;
   width: 100vw;
   height: 100vh;
+  padding: 1em;
+  box-sizing: border-box;
 }
 
 canvas {
   display: block;
+  max-width: 100%;
+  max-height: 100%;
 }

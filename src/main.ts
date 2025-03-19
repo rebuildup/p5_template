@@ -1,6 +1,6 @@
 import "./style.css";
 import { EditorManager } from "./001_Editors/001_EditorManager";
-import { setupAnimationRenderer } from "./002_Animations/001_AnimationRenderer";
+import { setupAnimationRenderer } from "./001_Editors/002_AnimationRenderer";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div id="canvas-container"></div>

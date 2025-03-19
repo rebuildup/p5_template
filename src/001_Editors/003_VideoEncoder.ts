@@ -1,5 +1,5 @@
-import { EditorManager } from "../001_Editors/001_EditorManager";
-import { BaseAnimation } from "./003_BaseAnimation";
+import { EditorManager } from "./001_EditorManager";
+import { BaseAnimation } from "../002_Animations/001_BaseAnimation";
 
 export class VideoEncoder {
   private p5: any;
@@ -45,10 +45,7 @@ export class VideoEncoder {
   }
 
   private async processCurrentFrame(animation: BaseAnimation): Promise<void> {
-    // Clear the buffer with transparent background
     this.buffer.clear();
-
-    // Draw frame counter
     this.buffer.fill(0, 0, 0, 200);
     this.buffer.textSize(16);
     this.buffer.textAlign(this.p5.LEFT, this.p5.TOP);
@@ -56,7 +53,6 @@ export class VideoEncoder {
     this.buffer.fill(255, 255, 255, 255);
     this.buffer.text(`Frame: ${this.encodingFrame}`, 10, 10);
 
-    // Draw animation
     animation.drawToBuffer(this.buffer, this.encodingFrame);
 
     const frameImage = this.buffer.get();

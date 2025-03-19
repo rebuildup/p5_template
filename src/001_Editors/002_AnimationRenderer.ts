@@ -1,8 +1,8 @@
-import { EditorManager } from "../001_Editors/001_EditorManager";
-import { VideoEncoder } from "./002_VideoEncoder";
-import { BaseAnimation } from "./003_BaseAnimation";
-import { CircleAnimation } from "./004_CircleAnimation";
-import { TriangleAnimation } from "./005_TriangleAnimation";
+import { EditorManager } from "./001_EditorManager";
+import { VideoEncoder } from "./003_VideoEncoder";
+import { BaseAnimation } from "../002_Animations/001_BaseAnimation";
+import { CircleAnimation } from "../002_Animations/002_CircleAnimation";
+import { TriangleAnimation } from "../002_Animations/003_TriangleAnimation";
 
 declare global {
   interface Window {
@@ -15,61 +15,53 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
   new window.p5((p: any) => {
     const videoEncoder = new VideoEncoder(p, editorManager);
 
-    // Fixed 2K resolution (2560x1440)
     const CANVAS_WIDTH = 2560;
     const CANVAS_HEIGHT = 1440;
+    const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
-    // Scale factor to fit the canvas in the window
-    let scaleFactor = 1;
-
-    // Available animations
     const animations: BaseAnimation[] = [
       new CircleAnimation(p, editorManager),
       new TriangleAnimation(p, editorManager),
     ];
 
-    // Current animation index
     let currentAnimationIndex = 0;
 
-    function calculateScaleFactor() {
-      const margin = 20;
+    function resizeCanvas() {
+      const margin = 16;
       const availableWidth = window.innerWidth - margin * 2;
       const availableHeight = window.innerHeight - margin * 2;
 
-      const scaleX = availableWidth / CANVAS_WIDTH;
-      const scaleY = availableHeight / CANVAS_HEIGHT;
+      let targetWidth = availableWidth;
+      let targetHeight = targetWidth / ASPECT_RATIO;
 
-      // Use the smaller scale to fit the canvas in the window
-      scaleFactor = Math.min(scaleX, scaleY, 1); // Never scale up
+      if (targetHeight > availableHeight) {
+        targetHeight = availableHeight;
+        targetWidth = targetHeight * ASPECT_RATIO;
+      }
+
+      const canvasElement = document.querySelector("canvas");
+      if (canvasElement) {
+        canvasElement.style.width = `${targetWidth}px`;
+        canvasElement.style.height = `${targetHeight}px`;
+      }
     }
 
     p.setup = () => {
-      calculateScaleFactor();
       const canvas = p.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
       canvas.parent("canvas-container");
+
       p.frameRate(editorManager.getFPS());
       p.colorMode(p.RGB);
       p.pixelDensity(1);
 
-      // Apply CSS scale transform to the canvas element
-      const canvasElement = document.querySelector("canvas");
-      if (canvasElement) {
-        canvasElement.style.transformOrigin = "top left";
-        canvasElement.style.transform = `scale(${scaleFactor})`;
-      }
+      resizeCanvas();
     };
 
     p.windowResized = () => {
-      calculateScaleFactor();
-      // Update the scale transform
-      const canvasElement = document.querySelector("canvas");
-      if (canvasElement) {
-        canvasElement.style.transform = `scale(${scaleFactor})`;
-      }
+      resizeCanvas();
     };
 
     p.keyPressed = () => {
-      // Toggle between animations with Tab key
       if (p.keyCode === p.TAB && !editorManager.isEncodingActive()) {
         currentAnimationIndex = (currentAnimationIndex + 1) % animations.length;
         p.preventDefault();
@@ -90,20 +82,17 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     };
 
     function drawFrame(frameIndex: number): void {
-      p.background(0, 0);
-      p.fill(255);
+      p.clear();
+      p.background(0, 0, 0, 0);
+
+      p.fill(0, 0, 0, 200);
       p.textSize(16);
       p.textAlign(p.LEFT, p.TOP);
-
-      // Draw shadow for better visibility
-      p.fill(0, 0, 0, 200);
       p.text(`Frame: ${frameIndex}`, 11, 11);
 
-      // Draw text
       p.fill(255, 255, 255, 255);
       p.text(`Frame: ${frameIndex}`, 10, 10);
 
-      // Draw current animation
       animations[currentAnimationIndex].draw(frameIndex);
     }
 
@@ -116,7 +105,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       }
     }
 
-    // Expose animation functions globally for encoder to use
     window.animationFunctions = {
       drawCurrentAnimation: (buffer: any, frameIndex: number) => {
         animations[currentAnimationIndex].drawToBuffer(buffer, frameIndex);

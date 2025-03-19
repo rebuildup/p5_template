@@ -1,4 +1,4 @@
-import { BaseAnimation } from "./003_BaseAnimation";
+import { BaseAnimation } from "./001_BaseAnimation";
 
 export class TriangleAnimation extends BaseAnimation {
   draw(frameIndex: number): void {
