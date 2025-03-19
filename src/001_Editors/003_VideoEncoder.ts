@@ -46,12 +46,6 @@ export class VideoEncoder {
 
   private async processCurrentFrame(animation: BaseAnimation): Promise<void> {
     this.buffer.clear();
-    this.buffer.fill(0, 0, 0, 200);
-    this.buffer.textSize(16);
-    this.buffer.textAlign(this.p5.LEFT, this.p5.TOP);
-    this.buffer.text(`Frame: ${this.encodingFrame}`, 11, 11);
-    this.buffer.fill(255, 255, 255, 255);
-    this.buffer.text(`Frame: ${this.encodingFrame}`, 10, 10);
 
     animation.drawToBuffer(this.buffer, this.encodingFrame);
 

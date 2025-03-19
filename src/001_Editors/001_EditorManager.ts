@@ -3,7 +3,7 @@ export class EditorManager {
   private currentFrame: number = 0;
   private keyframes: number[] = [0, 30, 60, 90];
   private currentKeyframeIndex: number = 0;
-  private fps: number = 30;
+  private fps: number = 60;
   private frameCount: number = 120;
   private isEncoding: boolean = false;
 

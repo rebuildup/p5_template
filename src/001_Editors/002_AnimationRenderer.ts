@@ -1,7 +1,7 @@
 import { EditorManager } from "./001_EditorManager";
 import { VideoEncoder } from "./003_VideoEncoder";
 import { BaseAnimation } from "../002_Animations/001_BaseAnimation";
-import { CircleAnimation } from "../002_Animations/002_CircleAnimation";
+//import { CircleAnimation } from "../002_Animations/002_CircleAnimation";
 import { TriangleAnimation } from "../002_Animations/003_TriangleAnimation";
 
 declare global {
@@ -20,7 +20,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
     const animations: BaseAnimation[] = [
-      new CircleAnimation(p, editorManager),
+      //new CircleAnimation(p, editorManager),
       new TriangleAnimation(p, editorManager),
     ];
 
@@ -84,15 +84,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     function drawFrame(frameIndex: number): void {
       p.clear();
       p.background(0, 0, 0, 0);
-
-      p.fill(0, 0, 0, 200);
-      p.textSize(16);
-      p.textAlign(p.LEFT, p.TOP);
-      p.text(`Frame: ${frameIndex}`, 11, 11);
-
-      p.fill(255, 255, 255, 255);
-      p.text(`Frame: ${frameIndex}`, 10, 10);
-
       animations[currentAnimationIndex].draw(frameIndex);
     }
 
