@@ -1,4 +1,5 @@
 import { EditorManager } from "../001_Editors/001_EditorManager";
+import { BaseAnimation } from "./003_BaseAnimation";
 
 export class VideoEncoder {
   private p5: any;
@@ -7,22 +8,18 @@ export class VideoEncoder {
   private encodingFrame: number = 0;
   private zip: any;
   private encodingStartTime: number = 0;
-  private useTransparency: boolean = false;
 
   constructor(p5Instance: any, editorManager: EditorManager) {
     this.p5 = p5Instance;
     this.editorManager = editorManager;
   }
 
-  public async encodeFrames(): Promise<void> {
+  public async encodeFrames(animation: BaseAnimation): Promise<void> {
     if (this.encodingFrame === 0) {
       this.initializeEncoding();
-      this.useTransparency = confirm(
-        "Would you like to create transparent PNGs? Click OK for transparent, Cancel for normal."
-      );
     }
 
-    await this.processCurrentFrame();
+    await this.processCurrentFrame(animation);
     this.editorManager.setEncodingProgress(this.encodingFrame);
 
     if (this.encodingFrame >= this.editorManager.getFrameCount()) {
@@ -47,21 +44,20 @@ export class VideoEncoder {
     console.log("Encoding started");
   }
 
-  private async processCurrentFrame(): Promise<void> {
-    if (this.useTransparency) {
-      const animationFunctions = (window as any).animationFunctions;
-      animationFunctions.drawTransparentAnimation(
-        this.buffer,
-        this.encodingFrame
-      );
-    } else {
-      this.buffer.background(0);
-      this.buffer.fill(255);
-      this.buffer.textSize(16);
-      this.buffer.textAlign(this.p5.LEFT, this.p5.TOP);
-      this.buffer.text(`Frame: ${this.encodingFrame}`, 10, 10);
-      this.drawOriginalToBuffer(this.encodingFrame);
-    }
+  private async processCurrentFrame(animation: BaseAnimation): Promise<void> {
+    // Clear the buffer with transparent background
+    this.buffer.clear();
+
+    // Draw frame counter
+    this.buffer.fill(0, 0, 0, 200);
+    this.buffer.textSize(16);
+    this.buffer.textAlign(this.p5.LEFT, this.p5.TOP);
+    this.buffer.text(`Frame: ${this.encodingFrame}`, 11, 11);
+    this.buffer.fill(255, 255, 255, 255);
+    this.buffer.text(`Frame: ${this.encodingFrame}`, 10, 10);
+
+    // Draw animation
+    animation.drawToBuffer(this.buffer, this.encodingFrame);
 
     const frameImage = this.buffer.get();
     const dataUrl = frameImage.canvas.toDataURL("image/png");
@@ -70,18 +66,6 @@ export class VideoEncoder {
       .toString()
       .padStart(5, "0")}.png`;
     this.zip.file(filename, base64Data, { base64: true });
-  }
-
-  private drawOriginalToBuffer(frameIndex: number): void {
-    const t = frameIndex / this.editorManager.getFrameCount();
-    const x = this.buffer.width * (0.5 + 0.4 * Math.cos(t * Math.PI * 2));
-    const y = this.buffer.height * (0.5 + 0.4 * Math.sin(t * Math.PI * 2));
-    const r = 128 + 127 * Math.sin(t * Math.PI * 2);
-    const g = 128 + 127 * Math.sin(t * Math.PI * 2 + (Math.PI * 2) / 3);
-    const b = 128 + 127 * Math.sin(t * Math.PI * 2 + (Math.PI * 4) / 3);
-    this.buffer.noStroke();
-    this.buffer.fill(r, g, b);
-    this.buffer.ellipse(x, y, 100, 100);
   }
 
   private async finalizeZip(): Promise<void> {
@@ -97,9 +81,7 @@ export class VideoEncoder {
         .getSeconds()
         .toString()
         .padStart(2, "0")}`;
-      const filename = `pvsf_frames_${
-        this.useTransparency ? "transparent_" : ""
-      }${timestamp}.zip`;
+      const filename = `pvsf_frames_${timestamp}.zip`;
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement("a");
       link.href = url;

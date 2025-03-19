@@ -1,6 +1,6 @@
 import "./style.css";
 import { EditorManager } from "./001_Editors/001_EditorManager";
-import { setupVideoComponents } from "./002_Parts/001_VideoSetup";
+import { setupAnimationRenderer } from "./002_Animations/001_AnimationRenderer";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <div id="canvas-container"></div>
@@ -8,6 +8,6 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 
 const editorManager = new EditorManager();
 
-setupVideoComponents(editorManager);
+setupAnimationRenderer(editorManager);
 
 (window as any).editorManager = editorManager;
