@@ -1,58 +1,25 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 }
 
 body {
   margin: 0;
+  padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 800px;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
 #canvas-container {
-  border: 2px solid #444;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-  background-color: #1a1a1a;
-}
-
-.controls {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  width: 100%;
-  background-color: #333;
-  padding: 1rem;
-  border-radius: 4px;
 }
 
-.control-instructions {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 0.5rem;
-}
-
-.control-instructions span {
-  padding: 0.3rem 0.6rem;
-  background-color: #444;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-#status {
-  font-weight: bold;
-  margin-top: 0.5rem;
+canvas {
+  display: block;
 }

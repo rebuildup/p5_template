@@ -1,47 +1,43 @@
-/**
- * EditorManager - Handles the editor state and user interactions
- * Manages playback state, keyframes, and encoding functionality
- */
 export class EditorManager {
   private isPlaying: boolean = false;
   private currentFrame: number = 0;
-  private keyframes: number[] = [0, 30, 60, 90]; // Default keyframes
+  private keyframes: number[] = [0, 30, 60, 90];
   private currentKeyframeIndex: number = 0;
   private fps: number = 30;
-  private frameCount: number = 120; // Total frames in the animation
+  private frameCount: number = 120;
   private isEncoding: boolean = false;
 
-  // Status updates
-  private statusElement: HTMLElement | null = null;
-
   constructor() {
-    // Initialize status element
-    this.statusElement = document.getElementById("status");
-
-    // Set up keyboard listeners
     this.setupKeyboardListeners();
   }
 
   private setupKeyboardListeners(): void {
     document.addEventListener("keydown", (e) => {
-      // Don't process keyboard shortcuts during encoding
       if (this.isEncoding) return;
 
       switch (e.key) {
-        case " ": // Space - toggle play/pause
+        case " ":
           this.togglePlayback();
           break;
-        case "ArrowLeft": // Previous keyframe
+        case "ArrowLeft":
           if (!this.isPlaying) {
-            this.previousKeyframe();
+            if (e.shiftKey) {
+              this.previousKeyframe();
+            } else {
+              this.previousFrame();
+            }
           }
           break;
-        case "ArrowRight": // Next keyframe
+        case "ArrowRight":
           if (!this.isPlaying) {
-            this.nextKeyframe();
+            if (e.shiftKey) {
+              this.nextKeyframe();
+            } else {
+              this.nextFrame();
+            }
           }
           break;
-        case "Enter": // Start encoding
+        case "Enter":
           if (!this.isPlaying) {
             this.startEncoding();
           }
@@ -50,18 +46,27 @@ export class EditorManager {
     });
   }
 
-  // Playback control methods
   public togglePlayback(): void {
     this.isPlaying = !this.isPlaying;
-    this.updateStatus();
+    this.updatePageTitle();
   }
 
   public isPlaybackActive(): boolean {
     return this.isPlaying;
   }
 
-  // Frame management methods
   public incrementFrame(): void {
+    this.currentFrame = (this.currentFrame + 1) % this.frameCount;
+    this.updatePageTitle();
+  }
+
+  public previousFrame(): void {
+    this.currentFrame =
+      (this.currentFrame - 1 + this.frameCount) % this.frameCount;
+    this.updatePageTitle();
+  }
+
+  public nextFrame(): void {
     this.currentFrame = (this.currentFrame + 1) % this.frameCount;
     this.updatePageTitle();
   }
@@ -75,13 +80,11 @@ export class EditorManager {
     this.updatePageTitle();
   }
 
-  // Keyframe navigation methods
   public previousKeyframe(): void {
     if (this.currentKeyframeIndex > 0) {
       this.currentKeyframeIndex--;
       this.setCurrentFrame(this.keyframes[this.currentKeyframeIndex]);
     }
-    this.updateStatus();
   }
 
   public nextKeyframe(): void {
@@ -89,17 +92,15 @@ export class EditorManager {
       this.currentKeyframeIndex++;
       this.setCurrentFrame(this.keyframes[this.currentKeyframeIndex]);
     }
-    this.updateStatus();
   }
 
   public getCurrentKeyframe(): number {
     return this.keyframes[this.currentKeyframeIndex];
   }
 
-  // Encoding methods
   public startEncoding(): void {
     this.isEncoding = true;
-    this.updateStatus("Starting encoding...");
+    console.log("Starting encoding...");
   }
 
   public isEncodingActive(): boolean {
@@ -108,43 +109,23 @@ export class EditorManager {
 
   public setEncodingComplete(): void {
     this.isEncoding = false;
-    this.updateStatus("Encoding complete!");
+    console.log("Encoding complete!");
   }
 
   public setEncodingProgress(frame: number): void {
     const percentage = Math.floor((frame / this.frameCount) * 100);
-    this.updateStatus(
+    console.log(
       `Encoding: ${percentage}% (Frame: ${frame}/${this.frameCount})`
     );
     this.updatePageTitle(frame);
   }
 
-  // Utility methods
   private updatePageTitle(frame: number = this.currentFrame): void {
-    // Update the page title to show the current frame
     document.title = this.isEncoding
       ? `Encoding Frame: ${frame}`
       : `Frame: ${frame}`;
   }
 
-  private updateStatus(message?: string): void {
-    if (this.statusElement) {
-      if (message) {
-        this.statusElement.textContent = message;
-      } else {
-        // Default status based on current state
-        if (this.isEncoding) {
-          this.statusElement.textContent = "Encoding...";
-        } else if (this.isPlaying) {
-          this.statusElement.textContent = `Playing (Frame: ${this.currentFrame})`;
-        } else {
-          this.statusElement.textContent = `Paused (Frame: ${this.currentFrame})`;
-        }
-      }
-    }
-  }
-
-  // Public methods for the frame count and FPS
   public getFrameCount(): number {
     return this.frameCount;
   }
