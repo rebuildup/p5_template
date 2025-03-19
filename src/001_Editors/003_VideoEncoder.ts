@@ -8,6 +8,7 @@ export class VideoEncoder {
   private encodingFrame: number = 0;
   private zip: any;
   private encodingStartTime: number = 0;
+  private isFinalizingZip: boolean = false; // ZIPファイナライズのステータスを追跡
 
   constructor(p5Instance: any, editorManager: EditorManager) {
     this.p5 = p5Instance;
@@ -15,6 +16,11 @@ export class VideoEncoder {
   }
 
   public async encodeFrames(animation: BaseAnimation): Promise<void> {
+    // 既にZIPファイナライズ中の場合は何もしない
+    if (this.isFinalizingZip) {
+      return;
+    }
+
     if (this.encodingFrame === 0) {
       this.initializeEncoding();
     }
@@ -22,8 +28,13 @@ export class VideoEncoder {
     await this.processCurrentFrame(animation);
     this.editorManager.setEncodingProgress(this.encodingFrame);
 
-    if (this.encodingFrame >= this.editorManager.getFrameCount()) {
-      await this.finalizeZip();
+    if (this.encodingFrame >= this.editorManager.getFrameCount() - 1) {
+      // ファイナライズフラグを設定して重複実行を防止
+      this.isFinalizingZip = true;
+      console.log("All frames processed, finalizing ZIP...");
+
+      // 遅延を入れてUIが更新される時間を確保
+      setTimeout(() => this.finalizeZip(), 100);
       return;
     }
 
@@ -41,6 +52,7 @@ export class VideoEncoder {
     this.zip = new (window as any).JSZip();
     this.encodingStartTime = Date.now();
     this.encodingFrame = 0;
+    this.isFinalizingZip = false;
     console.log("Encoding started");
   }
 
@@ -59,8 +71,14 @@ export class VideoEncoder {
   }
 
   private async finalizeZip(): Promise<void> {
+    console.log("Finalizing ZIP file...");
     try {
-      const zipBlob = await this.zip.generateAsync({ type: "blob" });
+      const zipBlob = await this.zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE", // 圧縮方式を明示的に指定
+        compressionOptions: { level: 5 }, // 中程度の圧縮レベル
+      });
+
       const date = new Date(this.encodingStartTime);
       const timestamp = `${date.getFullYear()}${(date.getMonth() + 1)
         .toString()
@@ -72,24 +90,41 @@ export class VideoEncoder {
         .toString()
         .padStart(2, "0")}`;
       const filename = `pvsf_frames_${timestamp}.zip`;
+
+      console.log(
+        `Creating download link for file: ${filename} (size: ${zipBlob.size} bytes)`
+      );
+
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement("a");
       link.href = url;
       link.download = filename;
+      link.style.display = "none";
       document.body.appendChild(link);
+
+      console.log("Triggering download...");
       link.click();
+
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      }, 100);
-      console.log("Encoding completed");
-      this.editorManager.setEncodingComplete();
-      this.encodingFrame = 0;
-      this.zip = null;
-      this.buffer = null;
+        console.log("Download cleanup completed");
+
+        this.resetEncoder();
+      }, 1000);
     } catch (error) {
       console.error("Error finalizing zip:", error);
+      this.resetEncoder();
       throw error;
     }
+  }
+
+  private resetEncoder(): void {
+    console.log("Encoding completed, resetting encoder state");
+    this.editorManager.setEncodingComplete();
+    this.encodingFrame = 0;
+    this.isFinalizingZip = false;
+    this.zip = null;
+    this.buffer = null;
   }
 }

@@ -1,8 +1,8 @@
 import { EditorManager } from "./001_EditorManager";
 import { VideoEncoder } from "./003_VideoEncoder";
 import { BaseAnimation } from "../002_Animations/001_BaseAnimation";
-//import { CircleAnimation } from "../002_Animations/002_CircleAnimation";
-import { TriangleAnimation } from "../002_Animations/003_TriangleAnimation";
+import { CircleAnimation } from "../002_Animations/002_CircleAnimation";
+//import { TriangleAnimation } from "../002_Animations/003_TriangleAnimation";
 
 declare global {
   interface Window {
@@ -20,8 +20,8 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
     const animations: BaseAnimation[] = [
-      //new CircleAnimation(p, editorManager),
-      new TriangleAnimation(p, editorManager),
+      new CircleAnimation(p, editorManager),
+      //new TriangleAnimation(p, editorManager),
     ];
 
     let currentAnimationIndex = 0;
@@ -95,7 +95,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         editorManager.setEncodingComplete();
       }
     }
-
     window.animationFunctions = {
       drawCurrentAnimation: (buffer: any, frameIndex: number) => {
         animations[currentAnimationIndex].drawToBuffer(buffer, frameIndex);
