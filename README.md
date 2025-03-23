@@ -1,7 +1,8 @@
 # P5.js template
 
-p5.jsで映像を作るときのテンプレートです
-viteを使っている
+p5.js で映像を作るときのテンプレートです
+
+vite を使っている
 
 # Installation
 
@@ -14,18 +15,35 @@ npm install
 ```bash
 npm run dev
 ```
-* Spaceで再生
-* 矢印でフレーム移動
-* Enterでエンコード書き出し
-  
+
+- Space で再生
+- 矢印でフレーム移動
+- Enter でエンコード書き出し
+
 # Note
 
-出力は透過png連番をzipファイルにしたもの
+出力は透過 png 連番を zip ファイルにしたもの
+
+- fps/total frames を変更したい時
+  src\001_Editors\001_EditorManager.ts 8,9 行
+
+- キャンバスの解像度を変更したい時
+  src\001_Editors\002_AnimationRenderer.ts 19,20 行
+
+- 描画するアニメーションを変更したい時
+  src\001_Editors\002_AnimationRenderer.ts 25 行
+
+- 出力する zip ファイルの名前を変更したい時
+  src\001_Editors\003_VideoEncoder.ts 91 行
 
 # Author
 
-* samuido
-* rebuild.up.up@gmail.com
+- samuido
+- rebuild.up.up@gmail.com
 
 # License
+
+:::note info
+free
 好きに使っていいすよ
+:::

@@ -21,6 +21,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
 
     const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
+    //Edit Here!
     const animations: BaseAnimation[] = [
       new CircleAnimation(p, editorManager),
       new TriangleAnimation(p, editorManager),
