@@ -15,42 +15,16 @@ export class EditorManager {
   }
 
   private setupKeyboardListeners(): void {
-    document.addEventListener("keydown", (e) => {
-      if (this.isEncoding) return;
-
-      switch (e.key) {
-        case " ":
-          this.togglePlayback();
-          break;
-        case "ArrowLeft":
-          if (!this.isPlaying) {
-            if (e.shiftKey) {
-              this.previousKeyframe();
-            } else {
-              this.previousFrame();
-            }
-          }
-          break;
-        case "ArrowRight":
-          if (!this.isPlaying) {
-            if (e.shiftKey) {
-              this.nextKeyframe();
-            } else {
-              this.nextFrame();
-            }
-          }
-          break;
-        case "Enter":
-          if (!this.isPlaying) {
-            this.startEncoding();
-          }
-          break;
-      }
-    });
+    // Removed keyboard listeners from here as they're now handled in AnimationRenderer
   }
 
   public togglePlayback(): void {
     this.isPlaying = !this.isPlaying;
+    this.updatePageTitle();
+  }
+
+  public stopPlayback(): void {
+    this.isPlaying = false;
     this.updatePageTitle();
   }
 
