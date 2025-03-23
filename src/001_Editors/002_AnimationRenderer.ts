@@ -27,9 +27,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       new TriangleAnimation(p, editorManager),
     ];
 
-    // No longer needed to switch between animations
-    // let currentAnimationIndex = 0;
-
     function resizeCanvas() {
       const margin = 16;
       const availableWidth = window.innerWidth - margin * 2;
@@ -65,8 +62,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       resizeCanvas();
     };
 
-    // TAB key is no longer needed to switch animations
-    // (Keeping the function in case you want to add other keyboard shortcuts)
     p.keyPressed = () => {
       if (editorManager.isEncodingActive()) {
         p.preventDefault();
@@ -90,7 +85,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       p.clear();
       p.background(0, 0, 0, 0);
 
-      // Draw all animations instead of just one
       animations.forEach((animation) => animation.draw(frameIndex));
     }
 
@@ -105,7 +99,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
 
     window.animationFunctions = {
       drawCurrentAnimation: (buffer: any, frameIndex: number) => {
-        // Draw all animations to buffer
         animations.forEach((animation) =>
           animation.drawToBuffer(buffer, frameIndex)
         );

@@ -25,16 +25,20 @@ npm run dev
 出力は透過 png 連番を zip ファイルにしたもの
 
 - fps/total frames を変更したい時
+
   src\001_Editors\001_EditorManager.ts 8,9 行
 
 - キャンバスの解像度を変更したい時
+
   src\001_Editors\002_AnimationRenderer.ts 19,20 行
 
 - 描画するアニメーションを変更したい時
+
   src\001_Editors\002_AnimationRenderer.ts 25 行
 
 - 出力する zip ファイルの名前を変更したい時
-  src\001_Editors\003_VideoEncoder.ts 91 行
+
+  src\001_Editors\003_VideoEncoder.ts 92 行
 
 # Author
 
@@ -43,7 +47,4 @@ npm run dev
 
 # License
 
-:::note info
-free
 好きに使っていいすよ
-:::

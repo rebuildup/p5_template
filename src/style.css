@@ -7,11 +7,13 @@ body {
   margin: 0;
   padding: 0;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  transition: background-color 0.3s ease;
 }
 
 #canvas-container {
@@ -19,7 +21,7 @@ body {
   justify-content: center;
   align-items: center;
   width: 100vw;
-  height: 100vh;
+  height: 90vh;
   padding: 1em;
   box-sizing: border-box;
 }
@@ -30,4 +32,39 @@ canvas {
   max-height: 100%;
   box-sizing: content-box;
   border: 4px outset black;
+}
+
+#instructions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  color: #aaa;
+  text-align: center;
+  padding: 0.5em;
+  font-size: 0.9em;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+#instructions p {
+  margin: 0.2em 0;
+}
+
+/* Preview-related styles */
+#preview-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* For indicating drag and drop state */
+body.drag-over {
+  background-color: #343434;
 }
