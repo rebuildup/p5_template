@@ -9,5 +9,4 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 const editorManager = new EditorManager();
 setupAnimationRenderer(editorManager);
 
-// Expose to window for debugging
 (window as any).editorManager = editorManager;

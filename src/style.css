@@ -34,7 +34,6 @@ canvas {
   border: 4px outset black;
 }
 
-/* For indicating drag and drop state */
 body.drag-over {
   background-color: #343434;
 }

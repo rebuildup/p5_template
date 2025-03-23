@@ -10,14 +10,6 @@ export class EditorManager {
 
   private isEncoding: boolean = false;
 
-  constructor() {
-    this.setupKeyboardListeners();
-  }
-
-  private setupKeyboardListeners(): void {
-    // Removed keyboard listeners from here as they're now handled in AnimationRenderer
-  }
-
   public togglePlayback(): void {
     this.isPlaying = !this.isPlaying;
     this.updatePageTitle();
