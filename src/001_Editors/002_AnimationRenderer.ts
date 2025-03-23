@@ -51,69 +51,100 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       p.pixelDensity(1);
       resizeCanvas();
       setupDropZone();
+
+      // キーダウンイベントリスナーを登録
+      document.addEventListener("keydown", handleKeyDown);
     };
 
     p.windowResized = () => {
       resizeCanvas();
     };
 
-    p.keyPressed = () => {
+    // キーダウンハンドラー
+    function handleKeyDown(e: KeyboardEvent) {
       if (editorManager.isEncodingActive()) {
-        p.preventDefault();
+        e.preventDefault();
         return;
       }
-      switch (p.keyCode) {
-        case 32:
-          if (isPreviewMode) {
-            editorManager.togglePlayback();
-          } else {
-            editorManager.togglePlayback();
-          }
+
+      // キーコードをp5.jsの定数に変換
+      const keyCode = e.keyCode;
+
+      // 数字キー (0-9) のキーコードは 48-57
+      // 対応する割合のフレームにジャンプする処理
+      if (keyCode >= 48 && keyCode <= 57 && !isPreviewMode) {
+        const digit = keyCode - 48; // 0-9
+        const frameCount = editorManager.getFrameCount();
+
+        let targetFrame;
+        if (digit === 0) {
+          // 0キーで最初のフレームに移動
+          targetFrame = 0;
+        } else {
+          // 1-9のキーでフレーム数の10%〜90%の位置に移動
+          targetFrame = Math.floor(frameCount * (digit / 10));
+        }
+
+        // 対象フレームに移動
+        editorManager.setCurrentFrame(targetFrame);
+        e.preventDefault();
+        return;
+      }
+
+      switch (keyCode) {
+        case 32: // Space
+          editorManager.togglePlayback();
+          e.preventDefault();
           break;
-        case p.LEFT_ARROW:
+        case 37: // LEFT_ARROW
           if (!editorManager.isPlaybackActive()) {
             if (isPreviewMode && previewFrames.length > 0) {
               currentPreviewFrameIndex =
                 (currentPreviewFrameIndex - 1 + previewFrames.length) %
                 previewFrames.length;
             } else if (!isPreviewMode) {
-              if (p.keyIsDown(p.SHIFT)) {
+              if (e.shiftKey) {
                 editorManager.previousKeyframe();
               } else {
                 editorManager.previousFrame();
               }
             }
           }
+          e.preventDefault();
           break;
-        case p.RIGHT_ARROW:
+        case 39: // RIGHT_ARROW
           if (!editorManager.isPlaybackActive()) {
             if (isPreviewMode && previewFrames.length > 0) {
               currentPreviewFrameIndex =
                 (currentPreviewFrameIndex + 1) % previewFrames.length;
             } else if (!isPreviewMode) {
-              if (p.keyIsDown(p.SHIFT)) {
+              if (e.shiftKey) {
                 editorManager.nextKeyframe();
               } else {
                 editorManager.nextFrame();
               }
             }
           }
+          e.preventDefault();
           break;
-        case p.UP_ARROW:
+        case 38: // UP_ARROW
           isPreviewMode = true;
           editorManager.stopPlayback();
+          e.preventDefault();
           break;
-        case p.DOWN_ARROW:
+        case 40: // DOWN_ARROW
           isPreviewMode = false;
           editorManager.stopPlayback();
+          e.preventDefault();
           break;
-        case p.ENTER:
+        case 13: // ENTER
           if (!isPreviewMode && !editorManager.isPlaybackActive()) {
             editorManager.startEncoding();
           }
+          e.preventDefault();
           break;
       }
-    };
+    }
 
     p.draw = () => {
       if (editorManager.isEncodingActive()) {
