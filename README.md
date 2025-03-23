@@ -1,22 +1,8 @@
 # Name P5.js template
-p5.jsで映像を作るときのテンプレートです
 
-[](
-# DEMO\
-\
-"hoge"の魅力が直感的に伝えわるデモ動画や図解を載せる\
-\
-# Features\
-\
-"hoge"のセールスポイントや差別化などを説明する\
-\
-# Requirement\
-\
-"hoge"を動かすのに必要なライブラリなどを列挙する\
-\
-* huga 3.5.2\
-* hogehuga 1.0.2\
-)
+p5.jsで映像を作るときのテンプレートです
+viteを使っている
+
 # Installation
 
 ```bash
