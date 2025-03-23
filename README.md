@@ -1,24 +1,22 @@
 # Name P5.js template
+p5.jsで映像を作るときのテンプレートです
 
-分かりやすくてカッコイイ名前をつける（今回は"hoge"という名前をつける）
-
-"hoge"が何かを簡潔に紹介する
-
-# DEMO
-
-"hoge"の魅力が直感的に伝えわるデモ動画や図解を載せる
-
-# Features
-
-"hoge"のセールスポイントや差別化などを説明する
-
-# Requirement
-
-"hoge"を動かすのに必要なライブラリなどを列挙する
-
-* huga 3.5.2
-* hogehuga 1.0.2
-
+[](
+# DEMO\
+\
+"hoge"の魅力が直感的に伝えわるデモ動画や図解を載せる\
+\
+# Features\
+\
+"hoge"のセールスポイントや差別化などを説明する\
+\
+# Requirement\
+\
+"hoge"を動かすのに必要なライブラリなどを列挙する\
+\
+* huga 3.5.2\
+* hogehuga 1.0.2\
+)
 # Installation
 
 ```bash
@@ -27,29 +25,21 @@ npm install
 
 # Usage
 
-DEMOの実行方法など、"hoge"の基本的な使い方を説明する
-
 ```bash
 npm run dev
 ```
-
+* Spaceで再生
+* 矢印でフレーム移動
+* Enterでエンコード書き出し
+  
 # Note
 
-注意点などがあれば書く
+出力は透過png連番をzipファイルにしたもの
 
 # Author
 
-作成情報を列挙する
-
-* 作成者
-* 所属
-* E-mail
+* samuido
+* rebuild.up.up@gmail.com
 
 # License
-ライセンスを明示する
-
-"hoge" is under [MIT license](https://en.wikipedia.org/wiki/MIT_License).
-
-社内向けなら社外秘であることを明示してる
-
-"hoge" is Confidential.
+好きに使っていいすよ
