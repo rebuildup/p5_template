@@ -8,7 +8,7 @@ export class VideoEncoder {
   private encodingFrame: number = 0;
   private zip: any;
   private encodingStartTime: number = 0;
-  private isFinalizingZip: boolean = false; // ZIPファイナライズのステータスを追跡
+  private isFinalizingZip: boolean = false;
 
   constructor(p5Instance: any, editorManager: EditorManager) {
     this.p5 = p5Instance;
@@ -16,7 +16,6 @@ export class VideoEncoder {
   }
 
   public async encodeFrames(animation: BaseAnimation): Promise<void> {
-    // 既にZIPファイナライズ中の場合は何もしない
     if (this.isFinalizingZip) {
       return;
     }
@@ -29,11 +28,9 @@ export class VideoEncoder {
     this.editorManager.setEncodingProgress(this.encodingFrame);
 
     if (this.encodingFrame >= this.editorManager.getFrameCount() - 1) {
-      // ファイナライズフラグを設定して重複実行を防止
       this.isFinalizingZip = true;
       console.log("All frames processed, finalizing ZIP...");
 
-      // 遅延を入れてUIが更新される時間を確保
       setTimeout(() => this.finalizeZip(), 100);
       return;
     }
@@ -75,8 +72,8 @@ export class VideoEncoder {
     try {
       const zipBlob = await this.zip.generateAsync({
         type: "blob",
-        compression: "DEFLATE", // 圧縮方式を明示的に指定
-        compressionOptions: { level: 5 }, // 中程度の圧縮レベル
+        compression: "DEFLATE",
+        compressionOptions: { level: 5 },
       });
 
       const date = new Date(this.encodingStartTime);
@@ -89,7 +86,9 @@ export class VideoEncoder {
         .getSeconds()
         .toString()
         .padStart(2, "0")}`;
-      const filename = `pvsf_frames_${timestamp}.zip`;
+
+      //Edit Here!
+      const filename = `frames_${timestamp}.zip`;
 
       console.log(
         `Creating download link for file: ${filename} (size: ${zipBlob.size} bytes)`
