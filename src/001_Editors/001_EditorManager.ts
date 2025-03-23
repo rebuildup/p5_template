@@ -1,5 +1,13 @@
 import { ANIMATION_CONFIG } from "../config";
 
+export interface EditorEvents {
+  onFrameChange?: (frame: number) => void;
+  onPlaybackChange?: (isPlaying: boolean) => void;
+  onEncodingStart?: () => void;
+  onEncodingProgress?: (frame: number, total: number) => void;
+  onEncodingComplete?: () => void;
+}
+
 export class EditorManager {
   private isPlaying: boolean = false;
   private currentFrame: number = 0;
@@ -10,15 +18,32 @@ export class EditorManager {
   private frameCount: number = ANIMATION_CONFIG.FRAME_COUNT;
 
   private isEncoding: boolean = false;
+  private events: EditorEvents = {};
+
+  constructor(events?: EditorEvents) {
+    if (events) {
+      this.events = events;
+    }
+  }
+
+  public setEvents(events: EditorEvents): void {
+    this.events = { ...this.events, ...events };
+  }
 
   public togglePlayback(): void {
     this.isPlaying = !this.isPlaying;
     this.updatePageTitle();
+    if (this.events.onPlaybackChange) {
+      this.events.onPlaybackChange(this.isPlaying);
+    }
   }
 
   public stopPlayback(): void {
     this.isPlaying = false;
     this.updatePageTitle();
+    if (this.events.onPlaybackChange) {
+      this.events.onPlaybackChange(this.isPlaying);
+    }
   }
 
   public isPlaybackActive(): boolean {
@@ -28,17 +53,20 @@ export class EditorManager {
   public incrementFrame(): void {
     this.currentFrame = (this.currentFrame + 1) % this.frameCount;
     this.updatePageTitle();
+    this.notifyFrameChange();
   }
 
   public previousFrame(): void {
     this.currentFrame =
       (this.currentFrame - 1 + this.frameCount) % this.frameCount;
     this.updatePageTitle();
+    this.notifyFrameChange();
   }
 
   public nextFrame(): void {
     this.currentFrame = (this.currentFrame + 1) % this.frameCount;
     this.updatePageTitle();
+    this.notifyFrameChange();
   }
 
   public getCurrentFrame(): number {
@@ -46,8 +74,12 @@ export class EditorManager {
   }
 
   public setCurrentFrame(frame: number): void {
-    this.currentFrame = Math.max(0, Math.min(frame, this.frameCount - 1));
-    this.updatePageTitle();
+    const newFrame = Math.max(0, Math.min(frame, this.frameCount - 1));
+    if (newFrame !== this.currentFrame) {
+      this.currentFrame = newFrame;
+      this.updatePageTitle();
+      this.notifyFrameChange();
+    }
   }
 
   public previousKeyframe(): void {
@@ -68,9 +100,41 @@ export class EditorManager {
     return this.keyframes[this.currentKeyframeIndex];
   }
 
+  public setKeyframes(keyframes: number[]): void {
+    this.keyframes = [...keyframes].sort((a, b) => a - b);
+    this.updateCurrentKeyframeIndex();
+  }
+
+  public addKeyframe(frame: number): void {
+    if (!this.keyframes.includes(frame)) {
+      this.keyframes.push(frame);
+      this.keyframes.sort((a, b) => a - b);
+      this.updateCurrentKeyframeIndex();
+    }
+  }
+
+  private updateCurrentKeyframeIndex(): void {
+    let closestIndex = 0;
+    let minDistance = Math.abs(this.keyframes[0] - this.currentFrame);
+
+    for (let i = 1; i < this.keyframes.length; i++) {
+      const distance = Math.abs(this.keyframes[i] - this.currentFrame);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = i;
+      }
+    }
+
+    this.currentKeyframeIndex = closestIndex;
+  }
+
   public startEncoding(): void {
     this.isEncoding = true;
     console.log("Starting encoding...");
+
+    if (this.events.onEncodingStart) {
+      this.events.onEncodingStart();
+    }
   }
 
   public isEncodingActive(): boolean {
@@ -80,6 +144,10 @@ export class EditorManager {
   public setEncodingComplete(): void {
     this.isEncoding = false;
     console.log("Encoding complete!");
+
+    if (this.events.onEncodingComplete) {
+      this.events.onEncodingComplete();
+    }
   }
 
   public setEncodingProgress(frame: number): void {
@@ -88,12 +156,22 @@ export class EditorManager {
       `Encoding: ${percentage}% (Frame: ${frame}/${this.frameCount})`
     );
     this.updatePageTitle(frame);
+
+    if (this.events.onEncodingProgress) {
+      this.events.onEncodingProgress(frame, this.frameCount);
+    }
   }
 
   private updatePageTitle(frame: number = this.currentFrame): void {
     document.title = this.isEncoding
       ? `Encoding Frame: ${frame}`
       : `Frame: ${frame}`;
+  }
+
+  private notifyFrameChange(): void {
+    if (this.events.onFrameChange) {
+      this.events.onFrameChange(this.currentFrame);
+    }
   }
 
   public getFrameCount(): number {
