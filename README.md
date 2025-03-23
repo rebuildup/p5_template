@@ -19,6 +19,8 @@ npm run dev
 - Space で再生
 - 矢印でフレーム移動
 - Enter でエンコード書き出し
+- 画面内に zip ファイルをドラックアンドドロップでプレビュー可能
+- 上下矢印キーで zip プレビューを切り替え可能
 
 # Note
 
@@ -26,21 +28,13 @@ npm run dev
 
 以下の設定は src\config.ts で変更可能
 
-- fps/total frames を変更したい時
+- fps/total frames を変更したい時(ANIMATION_CONFIG)
 
-ANIMATION_CONFIG
+- キャンバスの解像度を変更したい時(CANVAS_CONFIG)
 
-- キャンバスの解像度を変更したい時
+- 描画するアニメーションを変更したい時(createAnimations)
 
-CANVAS_CONFIG
-
-- 描画するアニメーションを変更したい時
-
-createAnimations
-
-- 出力する zip ファイルの名前を変更したい時
-
-OUTPUT_CONFIG
+- 出力する zip ファイルの名前を変更したい時(OUTPUT_CONFIG)
 
 # Author
 
