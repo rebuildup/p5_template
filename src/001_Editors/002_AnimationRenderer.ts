@@ -2,6 +2,7 @@ import { EditorManager } from "./001_EditorManager";
 import { VideoEncoder } from "./003_VideoEncoder";
 import { BaseAnimation } from "../002_Animations/001_BaseAnimation";
 import { CANVAS_CONFIG, createAnimations } from "../config";
+import { ResourceManager } from "../003_Resources/001_ResourceManager";
 
 interface FrameImage {
   index: number;
@@ -18,13 +19,16 @@ declare global {
 export function setupAnimationRenderer(editorManager: EditorManager): void {
   new window.p5((p: any) => {
     const videoEncoder = new VideoEncoder(p, editorManager);
+    const resourceManager = ResourceManager.getInstance();
     const CANVAS_WIDTH = CANVAS_CONFIG.WIDTH;
     const CANVAS_HEIGHT = CANVAS_CONFIG.HEIGHT;
     const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
-    const animations: BaseAnimation[] = createAnimations(p, editorManager);
+    let animations: BaseAnimation[] = [];
     let isPreviewMode = false;
     let previewFrames: FrameImage[] = [];
     let currentPreviewFrameIndex = 0;
+    let isResourceLoading = true;
+    let resourceLoadProgress = 0;
 
     function resizeCanvas() {
       const margin = 16;
@@ -50,16 +54,35 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       p.colorMode(p.RGB);
       p.pixelDensity(1);
       resizeCanvas();
+
+      resourceManager.initialize(p);
+      animations = createAnimations(p, editorManager);
+
+      loadResources();
+
       setupDropZone();
       document.addEventListener("keydown", handleKeyDown);
     };
+
+    async function loadResources() {
+      isResourceLoading = true;
+
+      try {
+        await resourceManager.loadAllResources();
+        console.log("All resources loaded successfully");
+        isResourceLoading = false;
+      } catch (error) {
+        console.error("Error loading resources:", error);
+        isResourceLoading = false;
+      }
+    }
 
     p.windowResized = () => {
       resizeCanvas();
     };
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (editorManager.isEncodingActive()) {
+      if (editorManager.isEncodingActive() || isResourceLoading) {
         e.preventDefault();
         return;
       }
@@ -153,10 +176,16 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     }
 
     p.draw = () => {
+      if (isResourceLoading) {
+        drawLoadingScreen();
+        return;
+      }
+
       if (editorManager.isEncodingActive()) {
         handleEncoding();
         return;
       }
+
       if (editorManager.isPlaybackActive()) {
         if (isPreviewMode && previewFrames.length > 0) {
           currentPreviewFrameIndex =
@@ -165,6 +194,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           editorManager.incrementFrame();
         }
       }
+
       if (
         isPreviewMode &&
         previewFrames.length > 0 &&
@@ -173,6 +203,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       ) {
         currentPreviewFrameIndex = 0;
       }
+
       if (isPreviewMode) {
         drawPreviewFrame();
         document.title =
@@ -187,10 +218,33 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       }
     };
 
+    function drawLoadingScreen(): void {
+      p.background(20);
+      p.fill(255);
+      p.textAlign(p.CENTER, p.CENTER);
+      p.textSize(32);
+      p.text("リソースをロード中...", p.width / 2, p.height / 2 - 40);
+
+      const barWidth = p.width * 0.6;
+      const barHeight = 20;
+      p.noStroke();
+      p.fill(80);
+      p.rect(p.width / 2 - barWidth / 2, p.height / 2, barWidth, barHeight);
+      p.fill(100, 180, 255);
+      p.rect(
+        p.width / 2 - barWidth / 2,
+        p.height / 2,
+        barWidth * resourceLoadProgress,
+        barHeight
+      );
+
+      resourceLoadProgress = Math.min(resourceLoadProgress + 0.01, 1);
+    }
+
     function drawFrame(frameIndex: number): void {
       try {
         p.clear();
-        p.background(0, 0, 0, 0);
+        p.background(CANVAS_CONFIG.BACKGROUND_COLOR);
         animations.forEach((animation) => animation.draw(frameIndex));
       } catch (error) {
         console.error("Error in drawFrame:", error);
