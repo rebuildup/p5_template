@@ -18,7 +18,7 @@ export class EditorManager {
   private frameCount: number = ANIMATION_CONFIG.FRAME_COUNT;
 
   private isEncoding: boolean = false;
-  private events: EditorEvents = {};
+  public events: EditorEvents = {};
 
   constructor(events?: EditorEvents) {
     if (events) {
@@ -39,10 +39,12 @@ export class EditorManager {
   }
 
   public stopPlayback(): void {
-    this.isPlaying = false;
-    this.updatePageTitle();
-    if (this.events.onPlaybackChange) {
-      this.events.onPlaybackChange(this.isPlaying);
+    if (this.isPlaying) {
+      this.isPlaying = false;
+      this.updatePageTitle();
+      if (this.events.onPlaybackChange) {
+        this.events.onPlaybackChange(this.isPlaying);
+      }
     }
   }
 
@@ -51,22 +53,40 @@ export class EditorManager {
   }
 
   public incrementFrame(): void {
+    const oldFrame = this.currentFrame;
     this.currentFrame = (this.currentFrame + 1) % this.frameCount;
     this.updatePageTitle();
-    this.notifyFrameChange();
+
+    // Notify when frame changes
+    if (oldFrame !== this.currentFrame) {
+      this.notifyFrameChange();
+    }
+
+    // Notify specifically when we loop back to the start
+    if (this.currentFrame === 0 && oldFrame === this.frameCount - 1) {
+      this.notifyFrameLoop();
+    }
   }
 
   public previousFrame(): void {
+    const oldFrame = this.currentFrame;
     this.currentFrame =
       (this.currentFrame - 1 + this.frameCount) % this.frameCount;
     this.updatePageTitle();
-    this.notifyFrameChange();
+
+    if (oldFrame !== this.currentFrame) {
+      this.notifyFrameChange();
+    }
   }
 
   public nextFrame(): void {
+    const oldFrame = this.currentFrame;
     this.currentFrame = (this.currentFrame + 1) % this.frameCount;
     this.updatePageTitle();
-    this.notifyFrameChange();
+
+    if (oldFrame !== this.currentFrame) {
+      this.notifyFrameChange();
+    }
   }
 
   public getCurrentFrame(): number {
@@ -172,6 +192,14 @@ export class EditorManager {
     if (this.events.onFrameChange) {
       this.events.onFrameChange(this.currentFrame);
     }
+  }
+
+  /**
+   * Called when animation loops back to the start
+   */
+  private notifyFrameLoop(): void {
+    // This could be extended with a specific frame loop event if needed
+    console.log("Animation loop completed");
   }
 
   public getFrameCount(): number {

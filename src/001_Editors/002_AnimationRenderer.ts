@@ -66,13 +66,44 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
 
     async function loadResources() {
       isResourceLoading = true;
+      resourceLoadProgress = 0;
 
       try {
-        await resourceManager.loadAllResources();
+        // Start loading resources asynchronously
+        const loadPromise = resourceManager.loadAllResources();
+
+        // Update progress while loading
+        const updateInterval = setInterval(() => {
+          const status = resourceManager.getResourceLoadingStatus();
+          if (status.total > 0) {
+            // Calculate progress based on actual loaded + failed resources
+            resourceLoadProgress =
+              (status.loaded + status.failed) / status.total;
+          }
+        }, 100);
+
+        // Wait for loading to complete
+        await loadPromise;
+
+        // Clean up interval
+        clearInterval(updateInterval);
+
+        // Make sure the progress is updated one final time
+        const finalStatus = resourceManager.getResourceLoadingStatus();
+        resourceLoadProgress =
+          finalStatus.total > 0
+            ? (finalStatus.loaded + finalStatus.failed) / finalStatus.total
+            : 1;
+
         console.log("All resources loaded successfully");
+
+        // Delay briefly to ensure the final loading state is visible
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         isResourceLoading = false;
       } catch (error) {
         console.error("Error loading resources:", error);
+        resourceLoadProgress = 1; // Force progress to complete
         isResourceLoading = false;
       }
     }
@@ -81,6 +112,9 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       resizeCanvas();
     };
 
+    // Add these functions to your AnimationRenderer.ts file
+
+    // Event handler for key down with sound management
     function handleKeyDown(e: KeyboardEvent) {
       if (editorManager.isEncodingActive() || isResourceLoading) {
         e.preventDefault();
@@ -121,11 +155,11 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       }
 
       switch (keyCode) {
-        case 32:
+        case 32: // Space
           editorManager.togglePlayback();
           e.preventDefault();
           break;
-        case 37:
+        case 37: // Left arrow
           if (!editorManager.isPlaybackActive()) {
             if (isPreviewMode && previewFrames.length > 0) {
               currentPreviewFrameIndex =
@@ -141,7 +175,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           }
           e.preventDefault();
           break;
-        case 39:
+        case 39: // Right arrow
           if (!editorManager.isPlaybackActive()) {
             if (isPreviewMode && previewFrames.length > 0) {
               currentPreviewFrameIndex =
@@ -156,17 +190,21 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           }
           e.preventDefault();
           break;
-        case 38:
-          isPreviewMode = true;
-          editorManager.stopPlayback();
+        case 38: // Up arrow - Enter preview mode
+          if (!isPreviewMode) {
+            isPreviewMode = true;
+            editorManager.stopPlayback(); // This will trigger sound stopping via the event
+          }
           e.preventDefault();
           break;
-        case 40:
-          isPreviewMode = false;
-          editorManager.stopPlayback();
+        case 40: // Down arrow - Exit preview mode
+          if (isPreviewMode) {
+            isPreviewMode = false;
+            editorManager.stopPlayback();
+          }
           e.preventDefault();
           break;
-        case 13:
+        case 13: // Enter
           if (!isPreviewMode && !editorManager.isPlaybackActive()) {
             editorManager.startEncoding();
           }
@@ -223,22 +261,57 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       p.fill(255);
       p.textAlign(p.CENTER, p.CENTER);
       p.textSize(32);
-      p.text("リソースをロード中...", p.width / 2, p.height / 2 - 40);
+      p.text("Loading Resources...", p.width / 2, p.height / 2 - 60);
 
+      // Get resource loading stats
+      const status = resourceManager.getResourceLoadingStatus();
+
+      // Show loading statistics
+      p.textSize(16);
+      p.text(
+        `${status.loaded}/${status.total} resources loaded${
+          status.failed > 0 ? ` (${status.failed} failed)` : ""
+        }`,
+        p.width / 2,
+        p.height / 2 - 20
+      );
+
+      // Draw loading bar
       const barWidth = p.width * 0.6;
       const barHeight = 20;
       p.noStroke();
       p.fill(80);
-      p.rect(p.width / 2 - barWidth / 2, p.height / 2, barWidth, barHeight);
-      p.fill(100, 180, 255);
       p.rect(
         p.width / 2 - barWidth / 2,
-        p.height / 2,
-        barWidth * resourceLoadProgress,
+        p.height / 2 + 20,
+        barWidth,
         barHeight
       );
 
-      resourceLoadProgress = Math.min(resourceLoadProgress + 0.01, 1);
+      // For actual loaded resources
+      p.fill(100, 180, 255);
+      p.rect(
+        p.width / 2 - barWidth / 2,
+        p.height / 2 + 20,
+        barWidth * (status.loaded / Math.max(status.total, 1)),
+        barHeight
+      );
+
+      // If a resource fails to load, show an additional info
+      if (status.failed > 0) {
+        p.fill(255, 100, 100);
+        p.textSize(14);
+        p.text(
+          "Some resources failed to load. The application will continue with fallback assets.",
+          p.width / 2,
+          p.height / 2 + 60
+        );
+        p.text(
+          "Check the browser console for details (Press F12 -> Console).",
+          p.width / 2,
+          p.height / 2 + 80
+        );
+      }
     }
 
     function drawFrame(frameIndex: number): void {

@@ -9,6 +9,7 @@ export class SoundAnimation extends BaseAnimation {
   private soundTriggerFrame: number = 30;
   private soundWaveSimulation: number[] = [];
   private wavePointCount: number = 100;
+  private activeSoundInstance: any = null;
 
   constructor(p5Instance: any, editorManager: any) {
     super(p5Instance, editorManager);
@@ -16,6 +17,22 @@ export class SoundAnimation extends BaseAnimation {
     for (let i = 0; i < this.wavePointCount; i++) {
       this.soundWaveSimulation.push(Math.random() * 0.5);
     }
+
+    // Subscribe to playback change events to stop sound when playback stops
+    editorManager.setEvents({
+      ...editorManager.events,
+      onPlaybackChange: (isPlaying: boolean) => {
+        if (!isPlaying) {
+          this.stopSound();
+        }
+      },
+      onFrameChange: (frame: number) => {
+        // Reset sound when frames are manually changed
+        if (frame === 0 || frame >= editorManager.getFrameCount() - 1) {
+          this.stopSound();
+        }
+      },
+    });
   }
 
   protected implementDrawing(
@@ -24,16 +41,19 @@ export class SoundAnimation extends BaseAnimation {
   ): void {
     const t = this.getNormalizedTime(frameIndex);
 
+    // Play sound at the trigger frame
     if (frameIndex === this.soundTriggerFrame && !this.soundPlayed) {
-      const sound = this.getSound(this.soundId);
-      if (sound && typeof sound.play === "function") {
-        sound.play();
-        this.soundPlayed = true;
-      }
+      this.playSound();
     }
 
+    // Reset the played flag when returning to the start
     if (frameIndex === 0) {
       this.soundPlayed = false;
+    }
+
+    // Stop sound on last frame
+    if (frameIndex === this.editorManager.getFrameCount() - 1) {
+      this.stopSound();
     }
 
     const centerX = context.width / 2;
@@ -129,5 +149,50 @@ export class SoundAnimation extends BaseAnimation {
     context.endShape();
 
     context.pop();
+  }
+
+  /**
+   * Play the sound and store the instance for later control
+   */
+  private playSound(): void {
+    // Stop any currently playing sound first
+    this.stopSound();
+
+    const sound = this.getSound(this.soundId);
+    if (sound && typeof sound.play === "function") {
+      try {
+        // Some sound implementations might behave differently
+        if (typeof sound.stop === "function") {
+          sound.stop(); // Stop any previous playback
+        }
+
+        this.activeSoundInstance = sound;
+        sound.play();
+        this.soundPlayed = true;
+        console.log("Playing sound:", this.soundId);
+      } catch (e) {
+        console.error("Error playing sound:", e);
+      }
+    }
+  }
+
+  /**
+   * Stop the currently playing sound
+   */
+  private stopSound(): void {
+    if (this.activeSoundInstance) {
+      try {
+        // Different p5.sound versions might have different APIs
+        if (typeof this.activeSoundInstance.stop === "function") {
+          this.activeSoundInstance.stop();
+        } else if (typeof this.activeSoundInstance.pause === "function") {
+          this.activeSoundInstance.pause();
+        }
+        console.log("Stopped sound:", this.soundId);
+      } catch (e) {
+        console.error("Error stopping sound:", e);
+      }
+      this.activeSoundInstance = null;
+    }
   }
 }

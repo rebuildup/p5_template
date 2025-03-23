@@ -5,9 +5,14 @@ import { ImageAnimation } from "./002_Animations/004_ImageAnimation";
 import { SoundAnimation } from "./002_Animations/005_SoundAnimation";
 import { ResourceManager } from "./003_Resources/001_ResourceManager";
 
+// Import your assets directly using Vite's asset importing
+// Note: You'll need to create these files first if they don't exist
+import sampleImageUrl from "../public/assets/images/NCG302.jpg";
+import sampleSoundUrl from "../public/assets/sounds/wip02-inst.mp3";
+
 export const ANIMATION_CONFIG = {
   FPS: 60,
-  FRAME_COUNT: 180,
+  FRAME_COUNT: 1800,
   LOOP: true,
 };
 
@@ -25,27 +30,35 @@ export const OUTPUT_CONFIG = {
   COMPRESSION_LEVEL: 5,
 };
 
+// Using the imported asset URLs
 export const RESOURCE_CONFIG = {
   IMAGES: [
     {
       id: "sample-image",
-      path: "./assets/images/NCG302.jpg",
+      // Use the imported URL
+      path: sampleImageUrl,
     },
   ],
   SOUNDS: [
     {
       id: "sample-sound",
-      path: "./assets/sounds/wip02-inst.mp3",
+      // Use the imported URL
+      path: sampleSoundUrl,
     },
   ],
 };
 
 export function initializeResources(): void {
   const resourceManager = ResourceManager.getInstance();
+
+  console.log("Registering resources:");
   RESOURCE_CONFIG.IMAGES.forEach((image) => {
+    console.log(`- Image: ${image.id} -> ${image.path}`);
     resourceManager.registerImage(image.id, image.path);
   });
+
   RESOURCE_CONFIG.SOUNDS.forEach((sound) => {
+    console.log(`- Sound: ${sound.id} -> ${sound.path}`);
     resourceManager.registerSound(sound.id, sound.path);
   });
 }
