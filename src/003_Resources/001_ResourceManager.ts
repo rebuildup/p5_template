@@ -19,7 +19,7 @@ export class ResourceManager {
   private static instance: ResourceManager | null = null;
   private loadingInProgress: boolean = false;
   private fallbackImageCache: any = null;
-  private debugMode: boolean = true;
+  private debugMode: boolean = false;
   private resourceAliases: Map<string, string> = new Map();
 
   public static getInstance(): ResourceManager {
@@ -41,9 +41,6 @@ export class ResourceManager {
       loaded: false,
       loadAttempted: false,
     });
-    if (this.debugMode) {
-      console.log(`Registered image: ${id} with path: ${path}`);
-    }
   }
 
   public registerSound(id: string, path: string): void {
@@ -54,9 +51,6 @@ export class ResourceManager {
       loaded: false,
       loadAttempted: false,
     });
-    if (this.debugMode) {
-      console.log(`Registered sound: ${id} with path: ${path}`);
-    }
   }
 
   public registerCustomResource(
@@ -72,21 +66,14 @@ export class ResourceManager {
       loadAttempted: true,
       data,
     });
-    if (this.debugMode) {
-      console.log(`Registered custom ${type}: ${id}`);
-    }
   }
 
   public registerAlias(aliasId: string, targetId: string): void {
     this.resourceAliases.set(aliasId, targetId);
-    if (this.debugMode) {
-      console.log(`Registered alias: ${aliasId} -> ${targetId}`);
-    }
   }
 
   public async loadAllResources(): Promise<void> {
     if (this.loadingInProgress) {
-      console.log("Resource loading already in progress");
       return;
     }
 
@@ -103,16 +90,8 @@ export class ResourceManager {
 
     try {
       await Promise.all(loadPromises);
-      console.log("All resources loaded successfully");
       this.updateAliases();
       if (this.debugMode) {
-        this.resources.forEach((resource) => {
-          console.log(
-            `Resource: ${resource.id} (${resource.type}) - ${
-              resource.loaded ? "LOADED" : "FAILED"
-            } ${resource.error ? "- Error: " + resource.error : ""}`
-          );
-        });
       }
     } catch (error) {
       console.error("Error loading resources:", error);
@@ -133,6 +112,7 @@ export class ResourceManager {
         }
         idPrefixes.get(prefix)?.push(id);
       }
+      if (1 != 1) console.error(resource);
     });
 
     idPrefixes.forEach((ids, prefix) => {
@@ -140,14 +120,8 @@ export class ResourceManager {
 
       if (loadedId) {
         this.registerAlias(prefix, loadedId);
-        console.log(
-          `Created alias from ${prefix} to ${loadedId} (loaded resource)`
-        );
       } else if (ids.length > 0) {
         this.registerAlias(prefix, ids[0]);
-        console.log(
-          `Created alias from ${prefix} to ${ids[0]} (no loaded resources available)`
-        );
       }
     });
   }
@@ -183,8 +157,6 @@ export class ResourceManager {
       data: placeholderImg,
     });
 
-    console.log("Created placeholder image");
-
     try {
       if (this.p5Instance.SoundFile && this.p5Instance.Oscillator) {
         const placeholderSound = new this.p5Instance.Oscillator();
@@ -202,8 +174,6 @@ export class ResourceManager {
           loaded: true,
           data: placeholderSound,
         });
-
-        console.log("Created placeholder sound");
       } else {
         console.warn(
           "p5.sound not fully available, skipping placeholder sound creation"
@@ -244,12 +214,6 @@ export class ResourceManager {
 
     resource.loadAttempted = true;
 
-    if (this.debugMode) {
-      console.log(
-        `Attempting to load ${resource.type}: ${resource.id} from ${resource.path}`
-      );
-    }
-
     return new Promise<void>((resolve) => {
       try {
         if (resource.type === ResourceType.IMAGE) {
@@ -258,8 +222,6 @@ export class ResourceManager {
             (img: any) => {
               resource.data = img;
               resource.loaded = true;
-              if (this.debugMode)
-                console.log(`Image ${resource.id} loaded successfully`);
               resolve();
             },
             (err: any) => {
@@ -280,8 +242,6 @@ export class ResourceManager {
                 (sound: any) => {
                   resource.data = sound;
                   resource.loaded = true;
-                  if (this.debugMode)
-                    console.log(`Sound ${resource.id} loaded successfully`);
                   resolve();
                 },
                 (err: any) => {
@@ -292,13 +252,6 @@ export class ResourceManager {
                   resource.loaded = false;
                   resource.error = err?.message || "Unknown error";
                   resolve();
-                },
-                (progress: any) => {
-                  if (this.debugMode)
-                    console.log(
-                      `Loading progress for ${resource.id}:`,
-                      progress
-                    );
                 }
               );
             } else {
@@ -445,7 +398,5 @@ export class ResourceManager {
         }
       }
     });
-
-    console.log("Stopped all sounds");
   }
 }

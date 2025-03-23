@@ -12,8 +12,6 @@ export class SoundAnimation extends BaseAnimation {
   private activeSoundInstance: any = null;
   private soundPaused: boolean = false;
   private lastPlayPosition: number = 0;
-  private debugMode: boolean = true;
-  // 再生速度を保持（p5.soundの再生位置変更時に必要）
   private playbackRate: number = 1.0;
 
   constructor(p5Instance: any, editorManager: any) {
@@ -23,20 +21,16 @@ export class SoundAnimation extends BaseAnimation {
       this.soundWaveSimulation.push(Math.random() * 0.5);
     }
 
-    // 再生状態変更イベントの監視
     editorManager.setEvents({
       ...editorManager.events,
       onPlaybackChange: (isPlaying: boolean) => {
         if (isPlaying) {
-          // 再生開始時
           this.resumeSound();
         } else {
-          // 一時停止時
           this.pauseSound();
         }
       },
       onFrameChange: (frame: number) => {
-        // 再生中でないときのフレーム変更
         if (!editorManager.isPlaybackActive()) {
           if (frame === 0 || frame >= editorManager.getFrameCount() - 1) {
             this.stopSound();
@@ -52,7 +46,6 @@ export class SoundAnimation extends BaseAnimation {
   ): void {
     const t = this.getNormalizedTime(frameIndex);
 
-    // サウンドトリガーフレームで音声を再生開始
     if (
       frameIndex === this.soundTriggerFrame &&
       !this.soundPlayed &&
@@ -61,12 +54,10 @@ export class SoundAnimation extends BaseAnimation {
       this.playSound();
     }
 
-    // 最初のフレームで再生フラグをリセット
     if (frameIndex === 0) {
       this.soundPlayed = false;
     }
 
-    // 最後のフレームで音声を停止
     if (frameIndex === this.editorManager.getFrameCount() - 1) {
       this.stopSound();
     }
@@ -166,42 +157,21 @@ export class SoundAnimation extends BaseAnimation {
     context.pop();
   }
 
-  /**
-   * 音声を初めから再生
-   */
   private playSound(): void {
     const sound = this.getSound(this.soundId);
     if (!sound) return;
 
-    // すでに一時停止中の場合は、再開処理を行う
     if (this.soundPaused && this.activeSoundInstance) {
       this.resumeSound();
       return;
     }
 
-    // 既存の音声を停止
     this.stopSound();
 
     try {
-      // 音声の再生
       this.activeSoundInstance = sound;
 
-      // 音声オブジェクトの診断（デバッグ用）
-      if (this.debugMode) {
-        console.log("Sound object methods:", {
-          play: typeof sound.play === "function",
-          pause: typeof sound.pause === "function",
-          stop: typeof sound.stop === "function",
-          jump: typeof sound.jump === "function",
-          loop: typeof sound.loop === "function",
-          rate: typeof sound.rate === "function",
-          duration: sound.duration ? sound.duration() : "N/A",
-        });
-      }
-
-      // 再生開始
       if (typeof sound.play === "function") {
-        // 再生速度を保存 (再開時のために)
         if (typeof sound.rate === "function") {
           this.playbackRate = sound.rate();
         }
@@ -209,7 +179,6 @@ export class SoundAnimation extends BaseAnimation {
         sound.play();
         this.soundPlayed = true;
         this.soundPaused = false;
-        console.log("Playing sound:", this.soundId);
       } else {
         console.error("Sound has no play method");
       }
@@ -218,46 +187,28 @@ export class SoundAnimation extends BaseAnimation {
     }
   }
 
-  /**
-   * 音声を一時停止
-   */
   private pauseSound(): void {
     if (!this.activeSoundInstance) return;
 
     try {
-      // 再生位置を取得
       this.saveCurrentPosition();
 
-      // 一時停止
       if (typeof this.activeSoundInstance.pause === "function") {
         this.activeSoundInstance.pause();
         this.soundPaused = true;
-        console.log(
-          `Paused sound at position: ${this.lastPlayPosition.toFixed(2)}s`
-        );
       } else if (typeof this.activeSoundInstance.stop === "function") {
-        // pause()が使えない場合は代替としてstop()を使用
         this.activeSoundInstance.stop();
         this.soundPaused = true;
-        console.log(
-          `Stopped sound at position: ${this.lastPlayPosition.toFixed(
-            2
-          )}s (pause not available)`
-        );
       }
     } catch (e) {
       console.error("Error pausing sound:", e);
     }
   }
 
-  /**
-   * 現在の再生位置を保存
-   */
   private saveCurrentPosition(): void {
     if (!this.activeSoundInstance) return;
 
     try {
-      // 再生位置の取得方法をいくつか試す
       if (typeof this.activeSoundInstance.currentTime === "function") {
         this.lastPlayPosition = this.activeSoundInstance.currentTime();
       } else if (this.activeSoundInstance.currentTime !== undefined) {
@@ -267,25 +218,16 @@ export class SoundAnimation extends BaseAnimation {
       } else if (this.activeSoundInstance.position !== undefined) {
         this.lastPlayPosition = this.activeSoundInstance.position;
       } else {
-        // 位置取得ができない場合はログ出力
         console.warn("Could not determine current position of sound");
-      }
-
-      if (this.debugMode) {
-        console.log("Saved position:", this.lastPlayPosition);
       }
     } catch (e) {
       console.error("Error saving current position:", e);
     }
   }
 
-  /**
-   * 一時停止した音声を再開
-   */
   private resumeSound(): void {
     if (!this.activeSoundInstance) {
       if (this.soundPlayed) {
-        // インスタンスがないけど再生済みなら最初から再生
         this.playSound();
       }
       return;
@@ -294,47 +236,30 @@ export class SoundAnimation extends BaseAnimation {
     if (!this.soundPaused) return;
 
     try {
-      // デバッグ情報
-      if (this.debugMode) {
-        console.log(
-          `Attempting to resume from position: ${this.lastPlayPosition.toFixed(
-            2
-          )}s`
-        );
-      }
-
-      // p5.soundライブラリの様々な実装に対応するため、複数の方法を試す
       const sound = this.activeSoundInstance;
 
-      // 方法1: stop()してからplay()の引数で開始位置を指定
       if (
         typeof sound.stop === "function" &&
         typeof sound.play === "function" &&
         sound.play.length >= 1
       ) {
-        // play()が引数を受け付ける場合
-
         sound.stop();
 
-        // 少し遅延させてから再生を開始（一部のブラウザでの問題を回避）
         setTimeout(() => {
           try {
             sound.play(0, this.playbackRate, 1.0, this.lastPlayPosition);
             this.soundPaused = false;
-            console.log("Resumed using play() with start time parameter");
           } catch (e) {
             console.error("Error during play with params:", e);
             this.fallbackResume(sound);
           }
-        }, 50); // 50ms遅延
+        }, 50);
       } else {
-        // 他の方法を試す
         this.fallbackResume(sound);
       }
     } catch (e) {
       console.error("Error resuming sound:", e);
 
-      // エラー発生時は最初から再生し直す
       try {
         if (
           this.activeSoundInstance &&
@@ -349,41 +274,30 @@ export class SoundAnimation extends BaseAnimation {
     }
   }
 
-  /**
-   * 代替の再開方法を試す
-   */
   private fallbackResume(sound: any): void {
     try {
-      // 方法2: jumpまたはcueを使用
       if (typeof sound.jump === "function") {
         sound.jump(this.lastPlayPosition);
         this.soundPaused = false;
-        console.log("Resumed using jump() method");
       } else if (typeof sound.cue === "function") {
         sound.cue(this.lastPlayPosition);
         sound.play();
         this.soundPaused = false;
-        console.log("Resumed using cue() method");
-      }
-      // 方法3: 一時停止中の音声を直接再生
-      else if (typeof sound.play === "function") {
+      } else if (typeof sound.play === "function") {
         sound.play();
         this.soundPaused = false;
-        console.log("Resumed using simple play() method");
       } else {
         console.warn("No suitable method found to resume sound");
       }
     } catch (e) {
       console.error("Error in fallback resume:", e);
 
-      // 最終手段: 新しいインスタンスで再生
       try {
         const newSound = this.getSound(this.soundId);
         if (newSound && typeof newSound.play === "function") {
           this.activeSoundInstance = newSound;
           newSound.play();
           this.soundPaused = false;
-          console.log("Resumed with new sound instance");
         }
       } catch (newError) {
         console.error("Failed all resume attempts:", newError);
@@ -391,31 +305,23 @@ export class SoundAnimation extends BaseAnimation {
     }
   }
 
-  /**
-   * 音声の再生を完全に停止
-   */
   private stopSound(): void {
     if (!this.activeSoundInstance) return;
 
     try {
       const sound = this.activeSoundInstance;
 
-      // stop()とpause()を両方試す
       if (typeof sound.stop === "function") {
         sound.stop();
-        console.log("Stopped sound using stop()");
       } else if (typeof sound.pause === "function") {
         sound.pause();
-        console.log("Stopped sound using pause()");
       }
 
-      // 状態をリセット
       this.activeSoundInstance = null;
       this.soundPaused = false;
       this.lastPlayPosition = 0;
     } catch (e) {
       console.error("Error stopping sound:", e);
-      // エラーが発生しても状態はリセット
       this.activeSoundInstance = null;
       this.soundPaused = false;
     }

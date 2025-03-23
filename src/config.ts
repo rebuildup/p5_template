@@ -1,8 +1,8 @@
 import { BaseAnimation } from "./002_Animations/001_BaseAnimation";
 import { CircleAnimation } from "./002_Animations/002_CircleAnimation";
-import { TriangleAnimation } from "./002_Animations/003_TriangleAnimation";
-import { ImageAnimation } from "./002_Animations/004_ImageAnimation";
-import { SoundAnimation } from "./002_Animations/005_SoundAnimation";
+//import { TriangleAnimation } from "./002_Animations/003_TriangleAnimation";
+//import { ImageAnimation } from "./002_Animations/004_ImageAnimation";
+//import { SoundAnimation } from "./002_Animations/005_SoundAnimation";
 import { ResourceManager } from "./003_Resources/001_ResourceManager";
 
 // Import your assets directly using Vite's asset importing
@@ -12,7 +12,7 @@ import sampleSoundUrl from "../public/assets/sounds/wip02-inst.mp3";
 
 export const ANIMATION_CONFIG = {
   FPS: 60,
-  FRAME_COUNT: 1800,
+  FRAME_COUNT: 600,
   LOOP: true,
 };
 
@@ -51,14 +51,11 @@ export const RESOURCE_CONFIG = {
 export function initializeResources(): void {
   const resourceManager = ResourceManager.getInstance();
 
-  console.log("Registering resources:");
   RESOURCE_CONFIG.IMAGES.forEach((image) => {
-    console.log(`- Image: ${image.id} -> ${image.path}`);
     resourceManager.registerImage(image.id, image.path);
   });
 
   RESOURCE_CONFIG.SOUNDS.forEach((sound) => {
-    console.log(`- Sound: ${sound.id} -> ${sound.path}`);
     resourceManager.registerSound(sound.id, sound.path);
   });
 }
@@ -72,8 +69,8 @@ export const createAnimations = (
   initializeResources();
   return [
     new CircleAnimation(p5, editorManager),
-    new TriangleAnimation(p5, editorManager),
-    new ImageAnimation(p5, editorManager),
-    new SoundAnimation(p5, editorManager),
+    //new TriangleAnimation(p5, editorManager),
+    //new ImageAnimation(p5, editorManager),
+    //new SoundAnimation(p5, editorManager),
   ];
 };

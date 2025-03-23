@@ -1,7 +1,7 @@
 import { BaseAnimation, DrawingContext } from "./001_BaseAnimation";
 
 export class CircleAnimation extends BaseAnimation {
-  private circleSize: number = 100;
+  private circleSize: number = 360;
   private circleSpeed: number = 1;
 
   protected implementDrawing(
@@ -13,7 +13,7 @@ export class CircleAnimation extends BaseAnimation {
       t * this.circleSpeed,
       context.width * 0.5,
       context.height * 0.5,
-      context.width * 0.4
+      context.width * 0.2
     );
     const r = this.colorCycle(t);
     const g = this.colorCycle(t, (Math.PI * 2) / 3);

@@ -405,7 +405,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
             );
           }
         } else {
-          console.log("Image is not fully loaded yet");
           p.fill(255);
           p.textAlign(p.CENTER, p.CENTER);
           p.textSize(24);
@@ -507,7 +506,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     }
 
     async function loadZipFile(file: File): Promise<FrameImage[]> {
-      console.log("Loading ZIP file:", file.name);
       try {
         if (!(window as any).JSZip) {
           throw new Error(
@@ -517,7 +515,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         const JSZip = (window as any).JSZip;
         const zip = new JSZip();
         const zipData = await zip.loadAsync(file);
-        console.log("ZIP file loaded, extracting PNG files...");
         const pngFiles = Object.keys(zipData.files)
           .filter((filename) => {
             const file = zipData.files[filename];
@@ -528,7 +525,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
             const numB = extractFrameNumber(b);
             return numA - numB;
           });
-        console.log(`Found ${pngFiles.length} PNG files in ZIP`);
         if (pngFiles.length === 0) {
           throw new Error("No PNG files found in the ZIP file");
         }
