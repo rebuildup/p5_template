@@ -1,4 +1,4 @@
-# Name P5.js template
+# P5.js template
 
 p5.jsで映像を作るときのテンプレートです
 viteを使っている
