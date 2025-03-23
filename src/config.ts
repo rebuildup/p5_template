@@ -7,8 +7,8 @@ import { ResourceManager } from "./003_Resources/001_ResourceManager";
 
 // Import your assets directly using Vite's asset importing
 // Note: You'll need to create these files first if they don't exist
-import sampleImageUrl from "../public/assets/images/NCG302.jpg";
-import sampleSoundUrl from "../public/assets/sounds/wip02-inst.mp3";
+import sampleImageUrl from "/assets/images/NCG302.jpg";
+import sampleSoundUrl from "/assets/sounds/wip02-inst.mp3";
 
 export const ANIMATION_CONFIG = {
   FPS: 60,
