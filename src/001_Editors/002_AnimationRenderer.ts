@@ -276,7 +276,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         p.height / 2 - 20
       );
 
-      // Draw loading bar
+      // Draw loading bar using the progress variable
       const barWidth = p.width * 0.6;
       const barHeight = 20;
       p.noStroke();
@@ -288,16 +288,22 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         barHeight
       );
 
-      // For actual loaded resources
+      // Use resourceLoadProgress for animation while waiting for actual progress
       p.fill(100, 180, 255);
       p.rect(
         p.width / 2 - barWidth / 2,
         p.height / 2 + 20,
-        barWidth * (status.loaded / Math.max(status.total, 1)),
+        barWidth * resourceLoadProgress, // Use the variable here
         barHeight
       );
 
-      // If a resource fails to load, show an additional info
+      // Increment the progress for a loading animation effect
+      resourceLoadProgress = Math.min(
+        resourceLoadProgress + 0.005,
+        status.total > 0 ? (status.loaded + status.failed) / status.total : 0.95
+      );
+
+      // If a resource fails to load, show additional info
       if (status.failed > 0) {
         p.fill(255, 100, 100);
         p.textSize(14);

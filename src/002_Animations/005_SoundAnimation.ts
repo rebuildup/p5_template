@@ -10,6 +10,8 @@ export class SoundAnimation extends BaseAnimation {
   private soundWaveSimulation: number[] = [];
   private wavePointCount: number = 100;
   private activeSoundInstance: any = null;
+  private soundPaused: boolean = false;
+  private lastPlayPosition: number = 0;
 
   constructor(p5Instance: any, editorManager: any) {
     super(p5Instance, editorManager);
@@ -18,18 +20,20 @@ export class SoundAnimation extends BaseAnimation {
       this.soundWaveSimulation.push(Math.random() * 0.5);
     }
 
-    // Subscribe to playback change events to stop sound when playback stops
     editorManager.setEvents({
       ...editorManager.events,
       onPlaybackChange: (isPlaying: boolean) => {
-        if (!isPlaying) {
-          this.stopSound();
+        if (isPlaying) {
+          this.resumeSound();
+        } else {
+          this.pauseSound();
         }
       },
       onFrameChange: (frame: number) => {
-        // Reset sound when frames are manually changed
-        if (frame === 0 || frame >= editorManager.getFrameCount() - 1) {
-          this.stopSound();
+        if (!editorManager.isPlaybackActive()) {
+          if (frame === 0 || frame >= editorManager.getFrameCount() - 1) {
+            this.stopSound();
+          }
         }
       },
     });
@@ -41,17 +45,18 @@ export class SoundAnimation extends BaseAnimation {
   ): void {
     const t = this.getNormalizedTime(frameIndex);
 
-    // Play sound at the trigger frame
-    if (frameIndex === this.soundTriggerFrame && !this.soundPlayed) {
+    if (
+      frameIndex === this.soundTriggerFrame &&
+      !this.soundPlayed &&
+      this.editorManager.isPlaybackActive()
+    ) {
       this.playSound();
     }
 
-    // Reset the played flag when returning to the start
     if (frameIndex === 0) {
       this.soundPlayed = false;
     }
 
-    // Stop sound on last frame
     if (frameIndex === this.editorManager.getFrameCount() - 1) {
       this.stopSound();
     }
@@ -151,24 +156,23 @@ export class SoundAnimation extends BaseAnimation {
     context.pop();
   }
 
-  /**
-   * Play the sound and store the instance for later control
-   */
   private playSound(): void {
-    // Stop any currently playing sound first
+    const sound = this.getSound(this.soundId);
+    if (!sound) return;
+
+    if (this.soundPaused && this.activeSoundInstance) {
+      this.resumeSound();
+      return;
+    }
+
     this.stopSound();
 
-    const sound = this.getSound(this.soundId);
-    if (sound && typeof sound.play === "function") {
+    if (typeof sound.play === "function") {
       try {
-        // Some sound implementations might behave differently
-        if (typeof sound.stop === "function") {
-          sound.stop(); // Stop any previous playback
-        }
-
         this.activeSoundInstance = sound;
         sound.play();
         this.soundPlayed = true;
+        this.soundPaused = false;
         console.log("Playing sound:", this.soundId);
       } catch (e) {
         console.error("Error playing sound:", e);
@@ -176,13 +180,60 @@ export class SoundAnimation extends BaseAnimation {
     }
   }
 
-  /**
-   * Stop the currently playing sound
-   */
+  private pauseSound(): void {
+    if (this.activeSoundInstance) {
+      try {
+        if (typeof this.activeSoundInstance.currentTime === "function") {
+          this.lastPlayPosition = this.activeSoundInstance.currentTime();
+        } else if (this.activeSoundInstance.currentTime !== undefined) {
+          this.lastPlayPosition = this.activeSoundInstance.currentTime;
+        }
+
+        if (typeof this.activeSoundInstance.pause === "function") {
+          this.activeSoundInstance.pause();
+          this.soundPaused = true;
+          console.log("Paused sound at position:", this.lastPlayPosition);
+        } else if (typeof this.activeSoundInstance.stop === "function") {
+          this.activeSoundInstance.stop();
+          this.soundPaused = true;
+          console.log("Stopped sound (pause not available)");
+        }
+      } catch (e) {
+        console.error("Error pausing sound:", e);
+      }
+    }
+  }
+
+  private resumeSound(): void {
+    if (this.activeSoundInstance && this.soundPaused) {
+      try {
+        if (typeof this.activeSoundInstance.play === "function") {
+          if (typeof this.activeSoundInstance.jump === "function") {
+            this.activeSoundInstance.jump(this.lastPlayPosition);
+            console.log("Resumed sound using jump to:", this.lastPlayPosition);
+          } else if (typeof this.activeSoundInstance.cue === "function") {
+            this.activeSoundInstance.cue(this.lastPlayPosition);
+            this.activeSoundInstance.play();
+            console.log("Resumed sound using cue to:", this.lastPlayPosition);
+          } else {
+            this.activeSoundInstance.play();
+            console.log(
+              "Resumed sound from beginning (no position control available)"
+            );
+          }
+          this.soundPaused = false;
+        }
+      } catch (e) {
+        console.error("Error resuming sound:", e);
+      }
+    } else if (!this.activeSoundInstance && this.soundPlayed) {
+      this.playSound();
+    }
+  }
+
   private stopSound(): void {
     if (this.activeSoundInstance) {
       try {
-        // Different p5.sound versions might have different APIs
         if (typeof this.activeSoundInstance.stop === "function") {
           this.activeSoundInstance.stop();
         } else if (typeof this.activeSoundInstance.pause === "function") {
@@ -193,6 +244,8 @@ export class SoundAnimation extends BaseAnimation {
         console.error("Error stopping sound:", e);
       }
       this.activeSoundInstance = null;
+      this.soundPaused = false;
+      this.lastPlayPosition = 0;
     }
   }
 }
