@@ -1,4 +1,5 @@
 import { EditorManager } from "./001_EditorManager";
+import { OUTPUT_CONFIG } from "../config";
 
 export class VideoEncoder {
   private p5: any;
@@ -28,8 +29,6 @@ export class VideoEncoder {
 
     if (this.encodingFrame >= this.editorManager.getFrameCount() - 1) {
       this.isFinalizingZip = true;
-      console.log("All frames processed, finalizing ZIP...");
-
       setTimeout(() => this.finalizeZip(), 100);
       return;
     }
@@ -49,7 +48,6 @@ export class VideoEncoder {
     this.encodingStartTime = Date.now();
     this.encodingFrame = 0;
     this.isFinalizingZip = false;
-    console.log("Encoding started");
   }
 
   private async processCurrentFrame(): Promise<void> {
@@ -69,7 +67,6 @@ export class VideoEncoder {
   }
 
   private async finalizeZip(): Promise<void> {
-    console.log("Finalizing ZIP file...");
     try {
       const zipBlob = await this.zip.generateAsync({
         type: "blob",
@@ -88,12 +85,7 @@ export class VideoEncoder {
         .toString()
         .padStart(2, "0")}`;
 
-      //Edit Here!
-      const filename = `frames_${timestamp}.zip`;
-
-      console.log(
-        `Creating download link for file: ${filename} (size: ${zipBlob.size} bytes)`
-      );
+      const filename = OUTPUT_CONFIG.getOutputFilename(timestamp);
 
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement("a");
@@ -102,25 +94,20 @@ export class VideoEncoder {
       link.style.display = "none";
       document.body.appendChild(link);
 
-      console.log("Triggering download...");
       link.click();
 
       setTimeout(() => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        console.log("Download cleanup completed");
-
         this.resetEncoder();
       }, 1000);
     } catch (error) {
-      console.error("Error finalizing zip:", error);
       this.resetEncoder();
       throw error;
     }
   }
 
   private resetEncoder(): void {
-    console.log("Encoding completed, resetting encoder state");
     this.editorManager.setEncodingComplete();
     this.encodingFrame = 0;
     this.isFinalizingZip = false;

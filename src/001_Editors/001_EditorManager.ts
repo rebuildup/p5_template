@@ -1,12 +1,13 @@
+import { ANIMATION_CONFIG } from "../config";
+
 export class EditorManager {
   private isPlaying: boolean = false;
   private currentFrame: number = 0;
   private keyframes: number[] = [0, 30, 60, 90];
   private currentKeyframeIndex: number = 0;
 
-  // Edit Here!
-  private fps: number = 60;
-  private frameCount: number = 120;
+  private fps: number = ANIMATION_CONFIG.FPS;
+  private frameCount: number = ANIMATION_CONFIG.FRAME_COUNT;
 
   private isEncoding: boolean = false;
 

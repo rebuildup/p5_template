@@ -24,21 +24,23 @@ npm run dev
 
 出力は透過 png 連番を zip ファイルにしたもの
 
+以下の設定は src\config.ts で変更可能
+
 - fps/total frames を変更したい時
 
-  src\001_Editors\001_EditorManager.ts 8,9 行
+ANIMATION_CONFIG
 
 - キャンバスの解像度を変更したい時
 
-  src\001_Editors\002_AnimationRenderer.ts 19,20 行
+CANVAS_CONFIG
 
 - 描画するアニメーションを変更したい時
 
-  src\001_Editors\002_AnimationRenderer.ts 25 行
+createAnimations
 
 - 出力する zip ファイルの名前を変更したい時
 
-  src\001_Editors\003_VideoEncoder.ts 92 行
+OUTPUT_CONFIG
 
 # Author
 

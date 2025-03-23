@@ -1,8 +1,7 @@
 import { EditorManager } from "./001_EditorManager";
 import { VideoEncoder } from "./003_VideoEncoder";
 import { BaseAnimation } from "../002_Animations/001_BaseAnimation";
-import { CircleAnimation } from "../002_Animations/002_CircleAnimation";
-import { TriangleAnimation } from "../002_Animations/003_TriangleAnimation";
+import { CANVAS_CONFIG, createAnimations } from "../config";
 
 interface FrameImage {
   index: number;
@@ -19,19 +18,10 @@ declare global {
 export function setupAnimationRenderer(editorManager: EditorManager): void {
   new window.p5((p: any) => {
     const videoEncoder = new VideoEncoder(p, editorManager);
-
-    //Edit Here!
-    const CANVAS_WIDTH = 2560;
-    const CANVAS_HEIGHT = 1440;
-
+    const CANVAS_WIDTH = CANVAS_CONFIG.WIDTH;
+    const CANVAS_HEIGHT = CANVAS_CONFIG.HEIGHT;
     const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
-
-    //Edit Here!
-    const animations: BaseAnimation[] = [
-      new CircleAnimation(p, editorManager),
-      new TriangleAnimation(p, editorManager),
-    ];
-
+    const animations: BaseAnimation[] = createAnimations(p, editorManager);
     let isPreviewMode = false;
     let previewFrames: FrameImage[] = [];
     let currentPreviewFrameIndex = 0;
@@ -40,15 +30,12 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       const margin = 16;
       const availableWidth = window.innerWidth - margin * 2;
       const availableHeight = window.innerHeight - margin * 2;
-
       let targetWidth = availableWidth;
       let targetHeight = targetWidth / ASPECT_RATIO;
-
       if (targetHeight > availableHeight) {
         targetHeight = availableHeight;
         targetWidth = targetHeight * ASPECT_RATIO;
       }
-
       const canvasElement = document.querySelector("canvas");
       if (canvasElement) {
         canvasElement.style.width = `${targetWidth}px`;
@@ -59,11 +46,9 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     p.setup = () => {
       const canvas = p.createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
       canvas.parent("canvas-container");
-
       p.frameRate(editorManager.getFPS());
       p.colorMode(p.RGB);
       p.pixelDensity(1);
-
       resizeCanvas();
       setupDropZone();
     };
@@ -77,7 +62,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         p.preventDefault();
         return;
       }
-
       switch (p.keyCode) {
         case 32:
           if (isPreviewMode) {
@@ -136,7 +120,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         handleEncoding();
         return;
       }
-
       if (editorManager.isPlaybackActive()) {
         if (isPreviewMode && previewFrames.length > 0) {
           currentPreviewFrameIndex =
@@ -145,7 +128,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           editorManager.incrementFrame();
         }
       }
-
       if (
         isPreviewMode &&
         previewFrames.length > 0 &&
@@ -154,7 +136,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       ) {
         currentPreviewFrameIndex = 0;
       }
-
       if (isPreviewMode) {
         drawPreviewFrame();
         document.title =
@@ -173,7 +154,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       try {
         p.clear();
         p.background(0, 0, 0, 0);
-
         animations.forEach((animation) => animation.draw(frameIndex));
       } catch (error) {
         console.error("Error in drawFrame:", error);
@@ -193,7 +173,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     function drawPreviewFrame(): void {
       p.clear();
       p.background(0, 0, 0, 0);
-
       if (previewFrames.length === 0) {
         p.fill(255);
         p.textAlign(p.CENTER, p.CENTER);
@@ -206,10 +185,8 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           p.width / 2,
           p.height / 2 + 36
         );
-
         return;
       }
-
       try {
         if (
           currentPreviewFrameIndex < 0 ||
@@ -217,20 +194,15 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         ) {
           currentPreviewFrameIndex = 0;
         }
-
         const frame = previewFrames[currentPreviewFrameIndex];
-
         if (frame && frame.image) {
           try {
             if (typeof frame.image.get === "function") {
               p.push();
               p.imageMode(p.CENTER);
-
               const aspectRatio = frame.image.width / frame.image.height;
               const canvasAspectRatio = p.width / p.height;
-
               let renderWidth, renderHeight;
-
               if (aspectRatio > canvasAspectRatio) {
                 renderWidth = p.width * 0.9;
                 renderHeight = renderWidth / aspectRatio;
@@ -238,7 +210,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                 renderHeight = p.height * 0.9;
                 renderWidth = renderHeight * aspectRatio;
               }
-
               p.image(
                 frame.image,
                 p.width / 2,
@@ -309,7 +280,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         e.preventDefault();
         e.stopPropagation();
         document.body.style.backgroundColor = "#242424";
-
         if (
           e.dataTransfer &&
           e.dataTransfer.files &&
@@ -319,11 +289,9 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           if (file.name.endsWith(".zip")) {
             try {
               const frames = await loadZipFile(file);
-
               if (frames.length > 0) {
                 previewFrames = frames;
                 currentPreviewFrameIndex = 0;
-
                 isPreviewMode = true;
                 editorManager.stopPlayback();
               }
@@ -348,10 +316,8 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
             try {
               const p5Img = p.createImg(src, "", "anonymous");
               p5Img.hide();
-
               const graphics = p.createGraphics(img.width, img.height);
               graphics.image(p5Img, 0, 0, img.width, img.height);
-
               resolve(graphics);
             } catch (e) {
               console.error("Error creating p5 image:", e);
@@ -372,21 +338,16 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
 
     async function loadZipFile(file: File): Promise<FrameImage[]> {
       console.log("Loading ZIP file:", file.name);
-
       try {
         if (!(window as any).JSZip) {
           throw new Error(
             "JSZip is not loaded. Please check if jszip.min.js is included in your page."
           );
         }
-
         const JSZip = (window as any).JSZip;
         const zip = new JSZip();
-
         const zipData = await zip.loadAsync(file);
-
         console.log("ZIP file loaded, extracting PNG files...");
-
         const pngFiles = Object.keys(zipData.files)
           .filter((filename) => {
             const file = zipData.files[filename];
@@ -397,34 +358,27 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
             const numB = extractFrameNumber(b);
             return numA - numB;
           });
-
         console.log(`Found ${pngFiles.length} PNG files in ZIP`);
-
         if (pngFiles.length === 0) {
           throw new Error("No PNG files found in the ZIP file");
         }
-
         const frameImages: FrameImage[] = [];
-
         p.background(0);
         p.fill(255);
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(24);
         p.text("ZIP ファイルを読み込み中...", p.width / 2, p.height / 2);
-
         let firstImage = null;
         if (pngFiles.length > 0) {
           const firstFrame = pngFiles[0];
           try {
             const firstData = await zipData.files[firstFrame].async("base64");
             firstImage = await loadImage(`data:image/png;base64,${firstData}`);
-
             if (firstImage) {
               frameImages.push({
                 index: 0,
                 image: firstImage,
               });
-
               p.clear();
               p.background(0);
               p.fill(255);
@@ -435,7 +389,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                 p.width / 2,
                 p.height / 2 + 50
               );
-
               if (typeof firstImage.get === "function") {
                 p.push();
                 p.tint(255, 128);
@@ -454,20 +407,15 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
             console.warn("Failed to load first frame:", error);
           }
         }
-
         for (let i = 1; i < pngFiles.length; i++) {
           const filename = pngFiles[i];
-
           try {
             const data = await zipData.files[filename].async("base64");
-
             const image = await loadImage(`data:image/png;base64,${data}`);
-
             frameImages.push({
               index: i,
               image,
             });
-
             if (i % 5 === 0 || i === pngFiles.length - 1) {
               const progressPercent = Math.floor((i / pngFiles.length) * 100);
               console.log(
@@ -475,7 +423,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                   pngFiles.length
                 } frames (${progressPercent}%)...`
               );
-
               p.clear();
               p.background(0);
               p.fill(255);
@@ -488,7 +435,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                 p.width / 2,
                 p.height / 2 + 50
               );
-
               p.noStroke();
               p.fill(100);
               p.rect(p.width * 0.2, p.height * 0.6, p.width * 0.6, 20);
@@ -499,7 +445,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                 p.width * 0.6 * (progressPercent / 100),
                 20
               );
-
               if (frameImages.length > 0) {
                 const firstFrame = frameImages[0];
                 if (
@@ -525,9 +470,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
             console.warn(`Failed to load frame ${filename}:`, error);
           }
         }
-
         frameImages.sort((a, b) => a.index - b.index);
-
         console.log("All frames loaded successfully");
         return frameImages;
       } catch (error: any) {
