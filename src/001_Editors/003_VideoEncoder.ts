@@ -1,5 +1,4 @@
 import { EditorManager } from "./001_EditorManager";
-import { BaseAnimation } from "../002_Animations/001_BaseAnimation";
 
 export class VideoEncoder {
   private p5: any;
@@ -15,7 +14,7 @@ export class VideoEncoder {
     this.editorManager = editorManager;
   }
 
-  public async encodeFrames(animation: BaseAnimation): Promise<void> {
+  public async encodeFrames(): Promise<void> {
     if (this.isFinalizingZip) {
       return;
     }
@@ -24,7 +23,7 @@ export class VideoEncoder {
       this.initializeEncoding();
     }
 
-    await this.processCurrentFrame(animation);
+    await this.processCurrentFrame();
     this.editorManager.setEncodingProgress(this.encodingFrame);
 
     if (this.encodingFrame >= this.editorManager.getFrameCount() - 1) {
@@ -53,10 +52,12 @@ export class VideoEncoder {
     console.log("Encoding started");
   }
 
-  private async processCurrentFrame(animation: BaseAnimation): Promise<void> {
+  private async processCurrentFrame(): Promise<void> {
     this.buffer.clear();
-
-    animation.drawToBuffer(this.buffer, this.encodingFrame);
+    (window as any).animationFunctions.drawCurrentAnimation(
+      this.buffer,
+      this.encodingFrame
+    );
 
     const frameImage = this.buffer.get();
     const dataUrl = frameImage.canvas.toDataURL("image/png");

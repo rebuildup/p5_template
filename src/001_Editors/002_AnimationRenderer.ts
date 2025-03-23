@@ -27,7 +27,8 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       new TriangleAnimation(p, editorManager),
     ];
 
-    let currentAnimationIndex = 0;
+    // No longer needed to switch between animations
+    // let currentAnimationIndex = 0;
 
     function resizeCanvas() {
       const margin = 16;
@@ -64,9 +65,10 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       resizeCanvas();
     };
 
+    // TAB key is no longer needed to switch animations
+    // (Keeping the function in case you want to add other keyboard shortcuts)
     p.keyPressed = () => {
-      if (p.keyCode === p.TAB && !editorManager.isEncodingActive()) {
-        currentAnimationIndex = (currentAnimationIndex + 1) % animations.length;
+      if (editorManager.isEncodingActive()) {
         p.preventDefault();
       }
     };
@@ -87,20 +89,26 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     function drawFrame(frameIndex: number): void {
       p.clear();
       p.background(0, 0, 0, 0);
-      animations[currentAnimationIndex].draw(frameIndex);
+
+      // Draw all animations instead of just one
+      animations.forEach((animation) => animation.draw(frameIndex));
     }
 
     async function handleEncoding(): Promise<void> {
       try {
-        await videoEncoder.encodeFrames(animations[currentAnimationIndex]);
+        await videoEncoder.encodeFrames();
       } catch (error) {
         console.error("Encoding error:", error);
         editorManager.setEncodingComplete();
       }
     }
+
     window.animationFunctions = {
       drawCurrentAnimation: (buffer: any, frameIndex: number) => {
-        animations[currentAnimationIndex].drawToBuffer(buffer, frameIndex);
+        // Draw all animations to buffer
+        animations.forEach((animation) =>
+          animation.drawToBuffer(buffer, frameIndex)
+        );
       },
     };
   });
