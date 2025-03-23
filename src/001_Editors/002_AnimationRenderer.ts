@@ -6,7 +6,7 @@ import { TriangleAnimation } from "../002_Animations/003_TriangleAnimation";
 
 interface FrameImage {
   index: number;
-  image: any; // Using any for p5.Image type since it's not defined in TypeScript
+  image: any;
 }
 
 declare global {
@@ -32,7 +32,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       new TriangleAnimation(p, editorManager),
     ];
 
-    // Preview mode properties
     let isPreviewMode = false;
     let previewFrames: FrameImage[] = [];
     let currentPreviewFrameIndex = 0;
@@ -80,9 +79,9 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       }
 
       switch (p.keyCode) {
-        case 32: // Space
+        case 32:
           if (isPreviewMode) {
-            editorManager.togglePlayback(); // We'll use the same playback control for both modes
+            editorManager.togglePlayback();
           } else {
             editorManager.togglePlayback();
           }
@@ -117,12 +116,10 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           }
           break;
         case p.UP_ARROW:
-          // Switch to preview mode
           isPreviewMode = true;
           editorManager.stopPlayback();
           break;
         case p.DOWN_ARROW:
-          // Switch to normal mode
           isPreviewMode = false;
           editorManager.stopPlayback();
           break;
@@ -142,7 +139,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
 
       if (editorManager.isPlaybackActive()) {
         if (isPreviewMode && previewFrames.length > 0) {
-          // Increment preview frame
           currentPreviewFrameIndex =
             (currentPreviewFrameIndex + 1) % previewFrames.length;
         } else if (!isPreviewMode) {
@@ -150,7 +146,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         }
       }
 
-      // Ensure the preview index is valid
       if (
         isPreviewMode &&
         previewFrames.length > 0 &&
@@ -200,11 +195,18 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       p.background(0, 0, 0, 0);
 
       if (previewFrames.length === 0) {
-        // Display message when no frames are available
         p.fill(255);
         p.textAlign(p.CENTER, p.CENTER);
-        p.textSize(32);
-        p.text("ファイルが選択されていません。", p.width / 2, p.height / 2);
+        p.textSize(36);
+        p.text("ファイルが選択されていません", p.width / 2, p.height / 2);
+        p.textSize(26);
+        p.fill(200);
+        p.text(
+          "出力ファイルと同じ形式のzipファイルをドラックランドドロップしてください",
+          p.width / 2,
+          p.height / 2 + 36
+        );
+
         return;
       }
 
@@ -220,24 +222,19 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
 
         if (frame && frame.image) {
           try {
-            // p5.Graphics objects have get() method we can use to check if it's valid
             if (typeof frame.image.get === "function") {
-              // Valid p5.Graphics object
               p.push();
               p.imageMode(p.CENTER);
 
-              // Use the Graphics object's width and height
               const aspectRatio = frame.image.width / frame.image.height;
               const canvasAspectRatio = p.width / p.height;
 
               let renderWidth, renderHeight;
 
               if (aspectRatio > canvasAspectRatio) {
-                // Image is wider than canvas
                 renderWidth = p.width * 0.9;
                 renderHeight = renderWidth / aspectRatio;
               } else {
-                // Image is taller than canvas
                 renderHeight = p.height * 0.9;
                 renderWidth = renderHeight * aspectRatio;
               }
@@ -296,7 +293,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     }
 
     function setupDropZone(): void {
-      // Setup the entire document as a drop zone
       document.addEventListener("dragover", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -325,11 +321,9 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
               const frames = await loadZipFile(file);
 
               if (frames.length > 0) {
-                // Set the frames to the preview
                 previewFrames = frames;
                 currentPreviewFrameIndex = 0;
 
-                // Switch to preview mode and reset preview index
                 isPreviewMode = true;
                 editorManager.stopPlayback();
               }
@@ -349,15 +343,12 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     function loadImage(src: string): Promise<any> {
       return new Promise((resolve, reject) => {
         try {
-          // Create an image element first to check if the image data is valid
           const img = new Image();
           img.onload = () => {
             try {
-              // Use p5's loadImage after we know the image data is valid
               const p5Img = p.createImg(src, "", "anonymous");
-              p5Img.hide(); // Hide the DOM element
+              p5Img.hide();
 
-              // Convert to a p5.Image object we can use with image()
               const graphics = p.createGraphics(img.width, img.height);
               graphics.image(p5Img, 0, 0, img.width, img.height);
 
@@ -383,7 +374,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       console.log("Loading ZIP file:", file.name);
 
       try {
-        // Use JSZip to extract the contents of the ZIP file
         if (!(window as any).JSZip) {
           throw new Error(
             "JSZip is not loaded. Please check if jszip.min.js is included in your page."
@@ -393,20 +383,16 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
         const JSZip = (window as any).JSZip;
         const zip = new JSZip();
 
-        // Read the ZIP file
         const zipData = await zip.loadAsync(file);
 
         console.log("ZIP file loaded, extracting PNG files...");
 
-        // Filter and sort the PNG files
         const pngFiles = Object.keys(zipData.files)
           .filter((filename) => {
             const file = zipData.files[filename];
             return !file.dir && filename.toLowerCase().endsWith(".png");
           })
           .sort((a, b) => {
-            // Sort by filename - assuming they are in the format frame_00001.png
-            // Extract numbers from filenames for more accurate sorting
             const numA = extractFrameNumber(a);
             const numB = extractFrameNumber(b);
             return numA - numB;
@@ -418,17 +404,14 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           throw new Error("No PNG files found in the ZIP file");
         }
 
-        // Load images from the ZIP file
         const frameImages: FrameImage[] = [];
 
-        // Show loading feedback to user
         p.background(0);
         p.fill(255);
         p.textAlign(p.CENTER, p.CENTER);
         p.textSize(24);
         p.text("ZIP ファイルを読み込み中...", p.width / 2, p.height / 2);
 
-        // Load the first frame to display something quickly
         let firstImage = null;
         if (pngFiles.length > 0) {
           const firstFrame = pngFiles[0];
@@ -436,14 +419,12 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
             const firstData = await zipData.files[firstFrame].async("base64");
             firstImage = await loadImage(`data:image/png;base64,${firstData}`);
 
-            // Add first frame
             if (firstImage) {
               frameImages.push({
                 index: 0,
                 image: firstImage,
               });
 
-              // Update the display once the first frame is loaded
               p.clear();
               p.background(0);
               p.fill(255);
@@ -455,10 +436,9 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                 p.height / 2 + 50
               );
 
-              // Show first frame in background
               if (typeof firstImage.get === "function") {
                 p.push();
-                p.tint(255, 128); // Semi-transparent
+                p.tint(255, 128);
                 p.imageMode(p.CENTER);
                 p.image(
                   firstImage,
@@ -475,24 +455,19 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           }
         }
 
-        // Then load the rest of the frames
         for (let i = 1; i < pngFiles.length; i++) {
           const filename = pngFiles[i];
 
           try {
-            // Extract the file content as base64
             const data = await zipData.files[filename].async("base64");
 
-            // Create an image from the base64 data
             const image = await loadImage(`data:image/png;base64,${data}`);
 
-            // Add to frames array
             frameImages.push({
               index: i,
               image,
             });
 
-            // Update progress every 5 frames or at the end
             if (i % 5 === 0 || i === pngFiles.length - 1) {
               const progressPercent = Math.floor((i / pngFiles.length) * 100);
               console.log(
@@ -501,7 +476,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                 } frames (${progressPercent}%)...`
               );
 
-              // Show progress
               p.clear();
               p.background(0);
               p.fill(255);
@@ -515,7 +489,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                 p.height / 2 + 50
               );
 
-              // Draw progress bar
               p.noStroke();
               p.fill(100);
               p.rect(p.width * 0.2, p.height * 0.6, p.width * 0.6, 20);
@@ -527,7 +500,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                 20
               );
 
-              // Show first frame in background
               if (frameImages.length > 0) {
                 const firstFrame = frameImages[0];
                 if (
@@ -536,7 +508,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
                   typeof firstFrame.image.get === "function"
                 ) {
                   p.push();
-                  p.tint(255, 100); // Semi-transparent
+                  p.tint(255, 100);
                   p.imageMode(p.CENTER);
                   p.image(
                     firstFrame.image,
@@ -554,7 +526,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           }
         }
 
-        // Make sure frameImages are sorted by index
         frameImages.sort((a, b) => a.index - b.index);
 
         console.log("All frames loaded successfully");
@@ -579,7 +550,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
     }
 
     function extractFrameNumber(filename: string): number {
-      // Try to extract a number from the filename
       const match = filename.match(/\d+/);
       if (match) {
         return parseInt(match[0], 10);
