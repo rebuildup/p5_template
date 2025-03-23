@@ -51,8 +51,6 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       p.pixelDensity(1);
       resizeCanvas();
       setupDropZone();
-
-      // キーダウンイベントリスナーを登録
       document.addEventListener("keydown", handleKeyDown);
     };
 
@@ -60,43 +58,51 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
       resizeCanvas();
     };
 
-    // キーダウンハンドラー
     function handleKeyDown(e: KeyboardEvent) {
       if (editorManager.isEncodingActive()) {
         e.preventDefault();
         return;
       }
 
-      // キーコードをp5.jsの定数に変換
       const keyCode = e.keyCode;
 
-      // 数字キー (0-9) のキーコードは 48-57
-      // 対応する割合のフレームにジャンプする処理
-      if (keyCode >= 48 && keyCode <= 57 && !isPreviewMode) {
-        const digit = keyCode - 48; // 0-9
-        const frameCount = editorManager.getFrameCount();
+      if (keyCode >= 48 && keyCode <= 57) {
+        const digit = keyCode - 48;
 
-        let targetFrame;
-        if (digit === 0) {
-          // 0キーで最初のフレームに移動
-          targetFrame = 0;
-        } else {
-          // 1-9のキーでフレーム数の10%〜90%の位置に移動
-          targetFrame = Math.floor(frameCount * (digit / 10));
+        if (isPreviewMode && previewFrames.length > 0) {
+          let targetIndex;
+
+          if (digit === 0) {
+            targetIndex = 0;
+          } else {
+            targetIndex = Math.floor(previewFrames.length * (digit / 10));
+            targetIndex = Math.min(targetIndex, previewFrames.length - 1);
+          }
+
+          currentPreviewFrameIndex = targetIndex;
+        } else if (!isPreviewMode) {
+          const frameCount = editorManager.getFrameCount();
+
+          let targetFrame;
+          if (digit === 0) {
+            targetFrame = 0;
+          } else {
+            targetFrame = Math.floor(frameCount * (digit / 10));
+          }
+
+          editorManager.setCurrentFrame(targetFrame);
         }
 
-        // 対象フレームに移動
-        editorManager.setCurrentFrame(targetFrame);
         e.preventDefault();
         return;
       }
 
       switch (keyCode) {
-        case 32: // Space
+        case 32:
           editorManager.togglePlayback();
           e.preventDefault();
           break;
-        case 37: // LEFT_ARROW
+        case 37:
           if (!editorManager.isPlaybackActive()) {
             if (isPreviewMode && previewFrames.length > 0) {
               currentPreviewFrameIndex =
@@ -112,7 +118,7 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           }
           e.preventDefault();
           break;
-        case 39: // RIGHT_ARROW
+        case 39:
           if (!editorManager.isPlaybackActive()) {
             if (isPreviewMode && previewFrames.length > 0) {
               currentPreviewFrameIndex =
@@ -127,17 +133,17 @@ export function setupAnimationRenderer(editorManager: EditorManager): void {
           }
           e.preventDefault();
           break;
-        case 38: // UP_ARROW
+        case 38:
           isPreviewMode = true;
           editorManager.stopPlayback();
           e.preventDefault();
           break;
-        case 40: // DOWN_ARROW
+        case 40:
           isPreviewMode = false;
           editorManager.stopPlayback();
           e.preventDefault();
           break;
-        case 13: // ENTER
+        case 13:
           if (!isPreviewMode && !editorManager.isPlaybackActive()) {
             editorManager.startEncoding();
           }
